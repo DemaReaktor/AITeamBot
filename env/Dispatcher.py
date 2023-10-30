@@ -1,19 +1,24 @@
 from aiogram import Dispatcher
 from aiogram.types import Message, ContentType
 from TelegramBot import bot
-from TTSConventer import TTSConventer
-import pathlib
 
 dispatcher = Dispatcher()
 
 
 @dispatcher.message()
 async def echo_handler(message: Message) -> None:
-    if message.content_type == ContentType.AUDIO:
-        await bot.download(message.audio, str(message.message_id) + ".mp3")
-        bot.send_message(message.chat.id, TTSConventer.convert(open(str(message.message_id) + ".mp3", 'rb')))
+    try:
+        name = message.text.split("def ", 1)[1].split("(", 1)[0]
+    except():
+        await bot.send_message(message.chat.id, "this is not function")
         return
-    if message.content_type == ContentType.VOICE:
-        await bot.download(message.voice, str(message.message_id)+".mp3")
-        bot.send_message(message.chat.id, TTSConventer.convert(open(str(message.message_id) + ".mp3", 'rb')))
+    import Functions
+    if hasattr(Functions, name):
+        await bot.send_message(message.chat.id, "function with this name already exists")
         return
+    function = {}
+    exec(message.text, globals(), function)
+    setattr(Functions, name, function[name])
+    file = open("env/Functions.py", "a")
+    file.write(message.text+"\n\n")
+    await bot.send_message(message.chat.id, str(getattr(Functions, name)()))
