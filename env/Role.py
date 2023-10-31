@@ -20,4 +20,4 @@ class Role(abc.ABC):
     def send_request(self, text):
         validate_text(text)
         new_text = self._change_text(text)
-        return API.send_request(self.system(),new_text)
+        return API.send_request(self.system(), new_text)

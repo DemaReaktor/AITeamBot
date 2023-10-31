@@ -9,12 +9,19 @@ dispatcher = Dispatcher()
 @dispatcher.message()
 async def echo_handler(message: Message) -> None:
     if message.content_type == ContentType.TEXT:
+        # checker
+        new_message = await bot.send_message(message.chat.id, "Завантаження менеджера")
         text = role("checker").send_request(message.text)
-        await bot.send_message(message.chat.id, text)
+        await bot.edit_message_text(text, message.chat.id, new_message.message_id)
+        # creator
+        new_message = await bot.send_message(message.chat.id, "Завантаження творця")
         text = role("creator").send_request(message.text)
-        await bot.send_message(message.chat.id, text)
+        await bot.edit_message_text(text, message.chat.id, new_message.message_id)
+        # maker
         if not(text == "None"):
-            await bot.send_message(message.chat.id, role("maker").send_request(text))
+            new_message = await bot.send_message(message.chat.id, "Завантаження розробника")
+            text = role("maker").send_request(text)
+            await bot.edit_message_text(text, message.chat.id, new_message.message_id)
     # try:
     #     name = message.text.split("def ", 1)[1].split("(", 1)[0]
     # except():
