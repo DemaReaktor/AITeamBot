@@ -1,7 +1,4 @@
-def doit(): 
-    print("done") 
-    return 3
-
-def doit3():
-    return 3*3*3*3
-
+def add(a, b):
+    """adds a and b
+    :return sum of a and b"""
+    return a + b
