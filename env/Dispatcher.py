@@ -23,12 +23,16 @@ def translate(text, chat_id):
     return tr(text, "ua", "en")
 
 
+role_names = {Checker: 'Валідатор', Creator: 'Творець', Maker: 'Розробник', Realizer: 'Виконувач',
+              Tester: 'Тестер', Uniter: 'Головний розробник'}
+
+
 async def __send_message(role: Role, text: str, role_loading: str) -> str:
     """send a message to group (text is role_loading). Then send request to the ChatGPT and get answer.
     In the end change a text of the message to the answer of the request and return the answer"""
     new_message = await bot.send_message(Config.GROUP_ID, role_loading)
     text = role.send_request(text)
-    await bot.edit_message_text(text, Config.GROUP_ID, new_message.message_id)
+    await bot.edit_message_text(role_names[type(role)] + "\n\n" + text, Config.GROUP_ID, new_message.message_id)
     return text
 
 
@@ -68,7 +72,7 @@ async def solve_task(message: Message) -> None:
         # while checker think functions cant solve a task
         while True:
             # checker
-            answer = await __send_message(checker, text, "Завантаження менеджера")
+            answer = await __send_message(checker, text, "Завантаження валідатора")
             if answer == 'yes':
                 break
 
