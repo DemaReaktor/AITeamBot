@@ -33,14 +33,29 @@ async def __send_message(role: Role, text: str, role_loading: str) -> str:
 
 
 @dispatcher.message()
-async def echo_handler(message: Message) -> None:
+async def start_command(message: Message) -> None:
     bot.add(message.chat.id)
     bot.send_message(message.chat.id, "Вітаю! Дайте будь-яке просте завдання, я його в в кілка секунд вирішу!"
                                       "(To see English write /change_language)")
 
 
 @dispatcher.message()
-async def echo_handler(message: Message) -> None:
+async def help_command(message: Message) -> None:
+    bot.add(message.chat.id)
+    bot.send_message(message.chat.id, translate("Напішть будь-яке просте завдання. Бот із затримкою його виконає.\n\n"
+                                                " Щоб змінити мову, напишіть команду /change_language.\n\n"
+                                                " Також можна подивитись на прогрес бота, для цього треба зайти в"
+                                                "групу @teamaiupgrade", message.chat.id))
+
+
+@dispatcher.message()
+async def change_language_command(message: Message) -> None:
+    bot.change_language(message.chat.id)
+    bot.send_message(message.chat.id, translate("Мову змінено", message.chat.id))
+
+
+@dispatcher.message()
+async def solve_task(message: Message) -> None:
     if message.content_type == ContentType.TEXT:
         new_message = await bot.send_message(message.chat.id, translate("Завантаження...", message.chat.id))
         # initialize roles
