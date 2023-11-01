@@ -2,10 +2,16 @@ from env.Role import Role
 
 
 class Maker(Role):
-    def name(self):
-        return "maker"
+    def __init__(self):
+        self.recode = False
 
     def system(self):
+        if self.recode:
+            return("Тобі надається текст, який містить функції , потім коментар '#-----------------',"
+                   " потім тести. Ті тести показують, які помилки є у функціях. Уяви себе розробником, який "
+                   "виправляє баги, маючи фуункції і тести, за допомогою яких тестували ті функції. Треба виправити"
+                   "код функцій, щоб не було багів, через які спрацьовують тести. У відповідь вписати лише текст з "
+                   "оновленими функціями. Документацію не міняти.")
         return ("Тобі надається текст, який містить один або декілька через кому таких елементів:"
                   " '{'name:\"<назва>\",'description:\"<опис>\"'}'. Текст замість <назва> містить"
                   "назву функції, а замість <опис>  - опис функції. Уяви себе програмістом і напиши функції"
@@ -16,7 +22,24 @@ class Maker(Role):
                 "'<бібліотеки>: <функції>'. Замість <бібліотеки> мають бути використані бібліотеки "
                 "через кому. Замість <функції> має бути текст функцій, який не містить нічого окрім самого"
                 "коду і документації. Якщо жодна бібліотека не потрібна,"
-                "напиши замість <бібліотеки> 'libraries are not needed'")
+                "напиши замість <бібліотеки> 'Немає бібліотек'")
 
     def _change_text(self, text):
         return text
+
+    @property
+    def libraries(self):
+        if not hasattr(self, '__libraries'):
+            return None
+        return self.__libraries
+
+    def send_request(self, text):
+        result = super().send_request(text)
+        results = result.split(':', 1)
+        if not (len(results) == 2):
+            return result
+        if results[0] == 'Немає бібліотек':
+            self.__libraries = None
+        else:
+            self.__libraries = results[0].split(',')
+        return result[1]

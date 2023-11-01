@@ -1,14 +1,9 @@
-# check, idea, do, test, (check), realise
 from OpenAIAPI import API
 from validation import validate_text
 import abc
 
 
 class Role(abc.ABC):
-    @abc.abstractmethod
-    def name(self):
-        pass
-
     @abc.abstractmethod
     def system(self):
         pass
