@@ -13,7 +13,9 @@ import Config
 dispatcher = Dispatcher()
 
 
-async def send_message(role: Role, text: str, role_loading: str) -> str:
+async def __send_message(role: Role, text: str, role_loading: str) -> str:
+    """send a message to group (text is role_loading). Then send request to the ChatGPT and get answer.
+    In the end change a text of the message to the answer of the request and return the answer"""
     new_message = await bot.send_message(Config.GROUP_ID, role_loading)
     text = role.send_request(text)
     await bot.edit_message_text(text, Config.GROUP_ID, new_message.message_id)
@@ -23,36 +25,46 @@ async def send_message(role: Role, text: str, role_loading: str) -> str:
 @dispatcher.message()
 async def echo_handler(message: Message) -> None:
     if message.content_type == ContentType.TEXT:
+        # initialize roles
         checker = Checker()
         creator = Creator()
         uniter = Uniter()
         realizer = Realizer()
+
         text = message.text
+        # while checker think functions cant solve a task
         while True:
             # checker
-            answer = await send_message(checker, text, "Завантаження менеджера")
+            answer = await __send_message(checker, text, "Завантаження менеджера")
             if answer == 'yes':
                 break
+
             # creator
-            text = await send_message(creator, text, "Завантаження творця")
+            text = await __send_message(creator, text, "Завантаження творця")
+
             # maker
             maker = Maker()
-            tester = Tester()
-            text = await send_message(maker, text, "Завантаження розробника")
-            # maker can recode functions
+            text = await __send_message(maker, text, "Завантаження розробника")
+            # maker can recode functions after tester run tests
             maker.recode = True
+
             # tester
+            tester = Tester()
+            # while tester has tests that fall during running
             while True:
-                await send_message(tester, text, "Завантаження тестера")
+                await __send_message(tester, text, "Завантаження тестера")
                 if tester.test_falls is None:
                     break
+
                 # maker with recode
-                text = await send_message(maker, tester.test_falls +
-                                          '\r\n#-----------------\r\n' + text, "Завантаження розробника")
+                text = await __send_message(maker, ','.join(tester.test_falls) +
+                                            "\r\n#-----------------\r\n" + text, "Завантаження розробника")
             # uniter
-            text = await send_message(uniter, text, "Завантаження головного розробника")
+            text = await __send_message(uniter, text, "Завантаження головного розробника")
+        # save all functions
         file = open("env/Functions.py", "w")
         file.write(text)
+
         # realizer
-        text = await send_message(realizer, message.text, "Завантаження виконувача")
+        text = await __send_message(realizer, message.text, "Завантаження виконувача")
         await bot.send_message(message.chat.id, text)
