@@ -5,7 +5,7 @@ class Maker(Role):
     def __init__(self):
         self.recode = False
 
-    def system(self):
+    def system(self) -> str:
         if self.recode:
             return("Тобі надається текст, який містить функції , потім коментар '#-----------------',"
                    " потім тести. Ті тести показують, які помилки є у функціях. Уяви себе розробником, який "
@@ -24,16 +24,16 @@ class Maker(Role):
                 "коду і документації. Якщо жодна бібліотека не потрібна,"
                 "напиши замість <бібліотеки> 'Немає бібліотек'")
 
-    def _change_text(self, text):
+    def _change_text(self, text: str) -> str:
         return text
 
     @property
-    def libraries(self):
+    def libraries(self) -> list[str] | None:
         if not hasattr(self, '__libraries'):
             return None
         return self.__libraries
 
-    def send_request(self, text):
+    def send_request(self, text: str) -> str:
         result = super().send_request(text)
         results = result.split(':', 1)
         if not (len(results) == 2):

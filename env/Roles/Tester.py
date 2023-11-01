@@ -10,12 +10,12 @@ class Tester(Role):
                 "хоча б один тест не пройшов успішно, замість <результат> виведи всі тести,"
                 " які не пройшли успішно.")
 
-    def _change_text(self, text):
+    def _change_text(self, text: str) -> str:
         return text
 
-    def send_request(self, text):
+    def send_request(self, text: str) -> str:
         result = super().send_request(text)
-        results = result.split(':', 1, reverse=True)
+        results = result.rsplit(':', 1)
         if not (len(results) == 2):
             return result
         if results[1] == 'чисто':
@@ -25,7 +25,7 @@ class Tester(Role):
         return result[0]
 
     @property
-    def test_falls(self):
+    def test_falls(self) -> list[str] | None:
         if not hasattr(self, '__test_falls'):
             return None
         return self.__test_falls

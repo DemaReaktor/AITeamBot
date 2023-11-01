@@ -2,7 +2,7 @@ from env.Role import Role
 
 
 class Creator(Role):
-    def system(self):
+    def system(self) -> str:
         return ("Тобі надається текст, його зміст:"
                   " 'завдання:\"<текст>\",\n функції:\"<файл>\"'. Текст замість <файл> містить Python"
                   "функції, а замість <текст>  - завдання. Уяви себе програмістом. Треба розбити завдання "
@@ -14,6 +14,6 @@ class Creator(Role):
                  "замість <опис> має бути опис. Кожен наступний крок має відділятись від попереднього комою."
                 " Назви і опис може бути тільки англійською мовою.")
 
-    def _change_text(self, text):
+    def _change_text(self, text: str) -> str:
         file_text = open("env/Functions.py", "rb").readlines()
         return f"завдання:\"{text}\",\n функції:\"{file_text}\""
