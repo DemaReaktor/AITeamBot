@@ -17,12 +17,14 @@ from Roles.Uniter import Uniter
 dispatcher = Dispatcher()
 
 
-def translate(text, chat_id):
+def __translate(text: str, chat_id: int) -> str:
+    """translate text if language of chat is english"""
     if bot.is_ukrainian(chat_id):
         return text
     return tr(text, "ua", "en")
 
 
+# names of roles
 role_names = {Checker: 'Валідатор', Creator: 'Творець', Maker: 'Розробник', Realizer: 'Виконувач',
               Tester: 'Тестер', Uniter: 'Головний розробник'}
 
@@ -38,6 +40,7 @@ async def __send_message(role: Role, text: str, role_loading: str) -> str:
 
 @dispatcher.message()
 async def start_command(message: Message) -> None:
+    """write hello message when user use command /start"""
     bot.add(message.chat.id)
     bot.send_message(message.chat.id, "Вітаю! Дайте будь-яке просте завдання, я його в в кілка секунд вирішу!"
                                       "(To see English write /change_language)")
@@ -45,23 +48,25 @@ async def start_command(message: Message) -> None:
 
 @dispatcher.message()
 async def help_command(message: Message) -> None:
-    bot.add(message.chat.id)
-    bot.send_message(message.chat.id, translate("Напішть будь-яке просте завдання. Бот із затримкою його виконає.\n\n"
-                                                " Щоб змінити мову, напишіть команду /change_language.\n\n"
-                                                " Також можна подивитись на прогрес бота, для цього треба зайти в"
-                                                "групу @teamaiupgrade", message.chat.id))
+    """write useful information about bot when user use command /help"""
+    bot.send_message(message.chat.id, __translate("Напішть будь-яке просте завдання. Бот із затримкою його "
+                                                  "виконає.\n\n Щоб змінити мову, напишіть команду /change_language."
+                                                  "\n\n Також можна подивитись на прогрес бота, для цього треба зайти"
+                                                  " в групу @teamaiupgrade", message.chat.id))
 
 
 @dispatcher.message()
 async def change_language_command(message: Message) -> None:
+    """change language of chat when user use command /change_language"""
     bot.change_language(message.chat.id)
-    bot.send_message(message.chat.id, translate("Мову змінено", message.chat.id))
+    bot.send_message(message.chat.id, __translate("Мову змінено", message.chat.id))
 
 
 @dispatcher.message()
 async def solve_task(message: Message) -> None:
+    """do new code and write answer of task"""
     if message.content_type == ContentType.TEXT:
-        new_message = await bot.send_message(message.chat.id, translate("Завантаження...", message.chat.id))
+        new_message = await bot.send_message(message.chat.id, __translate("Завантаження...", message.chat.id))
         # initialize roles
         checker = Checker()
         creator = Creator()
@@ -104,4 +109,4 @@ async def solve_task(message: Message) -> None:
 
         # realizer
         text = await __send_message(realizer, message.text, "Завантаження виконувача")
-        await bot.edit_message_text(translate(text, message.chat.id), message.chat.id, new_message.message_id)
+        await bot.edit_message_text(__translate(text, message.chat.id), message.chat.id, new_message.message_id)

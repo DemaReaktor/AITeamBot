@@ -4,25 +4,32 @@ import Config
 
 
 class LanguageBot(Bot):
+    """Bot with languages of every chat"""
     def __init__(self, *args, **kwargs):
         self.__is_ukrainian = dict()
         super().__init__(*args, **kwargs)
 
-    def add(self, chat_id):
+    def add(self, chat_id: int):
+        """add ability to change language to this chat"""
         validate_int(chat_id)
         if not (chat_id in self.__is_ukrainian.keys()):
             self.__is_ukrainian[chat_id] = True
 
-    def __validate_chat_id(self, chat_id):
+    def __validate_chat_id(self, chat_id: int):
+        """check chat_id has type int and is it in dictionary"""
         validate_int(chat_id)
         if not (chat_id in self.__is_ukrainian.keys()):
             raise ValueError("you should first add this chat to bot")
 
-    def change_language(self, chat_id):
+    def change_language(self, chat_id: int):
+        """change language of chat from ukrainian to english and other against
+        :raise ValueError if chat with this id is not added to bot using function add"""
         self.__validate_chat_id(chat_id)
         self.__is_ukrainian[chat_id] = not self.__is_ukrainian[chat_id]
 
-    def is_ukrainian(self, chat_id):
+    def is_ukrainian(self, chat_id: int) -> bool:
+        """get true if language of this chat is ukrainian
+        :raise ValueError if chat with this id is not added to bot using function add"""
         self.__validate_chat_id(chat_id)
         return self.__is_ukrainian[chat_id]
 
