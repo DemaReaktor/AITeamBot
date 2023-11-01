@@ -1,4 +1,4 @@
-from OpenAIAPI import API
+import OpenAIAPI
 from validation import validate_text
 import abc
 
@@ -20,4 +20,4 @@ class Role(abc.ABC):
         :param text is a question which you want to set to the ChatGPT
         :return an answer of the request"""
         validate_text(text)
-        return API.send_request(self.system(), self._change_text(text))
+        return OpenAIAPI.send_request(self.system(), self._change_text(text))

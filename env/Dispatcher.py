@@ -1,16 +1,26 @@
 from aiogram import Dispatcher
 from aiogram.types import Message, ContentType
 from TelegramBot import bot
+from Translater import translate as tr
+import Config
+
 from Role import Role
+# roles
 from Roles.Tester import Tester
 from Roles.Checker import Checker
 from Roles.Creator import Creator
 from Roles.Maker import Maker
 from Roles.Realizer import Realizer
 from Roles.Uniter import Uniter
-import Config
+
 
 dispatcher = Dispatcher()
+
+
+def translate(text, chat_id):
+    if bot.is_ukrainian(chat_id):
+        return text
+    return tr(text, "ua", "en")
 
 
 async def __send_message(role: Role, text: str, role_loading: str) -> str:
@@ -24,7 +34,15 @@ async def __send_message(role: Role, text: str, role_loading: str) -> str:
 
 @dispatcher.message()
 async def echo_handler(message: Message) -> None:
+    bot.add(message.chat.id)
+    bot.send_message(message.chat.id, "Вітаю! Дайте будь-яке просте завдання, я його в в кілка секунд вирішу!"
+                                      "(To see English write /change_language)")
+
+
+@dispatcher.message()
+async def echo_handler(message: Message) -> None:
     if message.content_type == ContentType.TEXT:
+        new_message = await bot.send_message(message.chat.id, translate("Завантаження...", message.chat.id))
         # initialize roles
         checker = Checker()
         creator = Creator()
@@ -67,4 +85,4 @@ async def echo_handler(message: Message) -> None:
 
         # realizer
         text = await __send_message(realizer, message.text, "Завантаження виконувача")
-        await bot.send_message(message.chat.id, text)
+        await bot.edit_message_text(translate(text, message.chat.id), message.chat.id, new_message.message_id)
