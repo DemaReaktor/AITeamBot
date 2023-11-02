@@ -1,7 +1,7 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Uniter(Role):
+class Uniter(RoleWithTask):
     def system(self) -> str:
         # uniter gets old function in Function.py file and new functions
         # he returns a text which has all functions

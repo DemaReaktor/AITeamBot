@@ -1,7 +1,7 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Creator(Role):
+class Creator(RoleWithTask):
     def system(self) -> str:
         # checker should return a list which has elements as name of step and his description
         # {name: add ,description: adds numbers},{name: minus ,description: minus numbers},

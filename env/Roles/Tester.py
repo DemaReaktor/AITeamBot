@@ -1,7 +1,7 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Tester(Role):
+class Tester(RoleWithTask):
     def system(self):
         # tester get all functions
         # he returns all written tests
@@ -29,7 +29,7 @@ class Tester(Role):
         else:
             self.__test_falls = results[1].split(',')
         # return all tests
-        return result[0]
+        return results[0]
 
     @property
     def test_falls(self) -> list[str] | None:

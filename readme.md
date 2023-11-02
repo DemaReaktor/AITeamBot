@@ -24,10 +24,73 @@ He uses ChatGPT.
 [Код](#Код)
 
 # Bot
+*Bot name: AITeamBot
+*nickname: @AITeamMonologbot.
+*commands: help, change_language.
 
-# Group-for-watch-upgrade
+Help: Describes how you can use the bot, namely: write any simple task. The bot will execute it with a delay. Also tells about the /change_language command. At the end, I will tell you about the @teamaiupgrade group.
 
-# Team
+Change Language: changes the language from Ukrainian to English and vice versa.
+
+If you just write a message, the bot will perceive it as a task that needs to be done. If the message is not text, it will ignore it.
+
+[Back](#Context)
+
+# Group-to-track-progress
+
+Link: t.me/+erndqXxg-vZkMDNi.
+
+This is a special group where you can see how the bot creates roles that communicate with each other. Each role displays its role and its text in the message.
+
+[Back](#Context)
+
+# Command
+
+Roles: Checker, Creator, Maker, Realizer, Uniter, Tester
+
+Everyone plays an important role
+
+Validator: checks whether the already generated code is sufficient to solve the task.
+
+Creator: divides tasks into steps and names them, describing them in parallel.
+
+Developer: Creates features based on creator names and descriptions. Also edits code after testing based on failed tests.
+
+Tester: creates tests, tests functions.
+
+Lead Developer: Adds new features to existing features.
+
+Executor: based on functions, performs the tasks assigned to the team.
+
+[Back](#Context)
+
+# Code
+
+The main function (main.py) starts the dispatcher (Dispatcher.py) based on the bot (TelegramBot.py).
+
+The bot contains data about the language of each group (or person), and can change it as needed.
+
+The manager contains all the commands and also the function of responding to messages.
+When writing a message, the response function creates roles that pass data to each other and output the result at the end. The result is translated according to the language of the group (or person) (Translater.py).
+
+More about role relationships:
+1. The validator checks whether a new code needs to be created. If so, go to step 2.
+If not, proceed to step 6.
+2. The creator creates names and descriptions of new functions. Then step 3.
+3. Developer makes functions based on names and description. Then step 4.
+4. The tester tests the functions, if not all tests were successful, go to step 3 (only the developer will edit the code based on the tests).
+If all the tests were successful, we go to step 5.
+5. The main developer adds new functions to the existing ones. Then step 1.
+6. The executor solves the task based on the available functions.
+
+Each role is a separate class (All these classes are in their respective files in the Roles folder), but each role is a child of the abstract class Role(Role.py), which has the main functions. A role is implemented by sending requests to the GPT chat, each role has its own (System) request. Requests are created in OpenAIAPI.py.
+
+There is also a Config.py file where the keys, id and other confidential information are located, so this file is not on git, it must be created and your own keys registered.
+
+Functions.py stores all functions created by the command.
+
+[Back](#Context)
+
 
 # Бот
 

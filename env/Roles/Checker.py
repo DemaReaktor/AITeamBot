@@ -1,7 +1,7 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Checker(Role):
+class Checker(RoleWithTask):
     def system(self) -> str:
         # checker should return yes if all needed functions already exist in file Functions to solve the task
         # otherwise return no

@@ -1,9 +1,10 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Maker(Role):
-    def __init__(self):
+class Maker(RoleWithTask):
+    def __init__(self, *args, **kwargs):
         self.recode = False
+        super().__init__(*args, **kwargs)
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
@@ -27,9 +28,9 @@ class Maker(Role):
                 " причому на англійській мові. Для написання функцій можна використовувати "
                 "бібліотеки Python, а також OpenAI API. Відповідь потрібно написати за таким форматом: "
                 "'<бібліотеки>: <функції>'. Замість <бібліотеки> мають бути використані бібліотеки "
-                "через кому. Замість <функції> має бути текст функцій, який не містить нічого окрім самого"
-                "коду і документації. Якщо жодна бібліотека не потрібна,"
-                "напиши замість <бібліотеки> 'Немає бібліотек'")
+                "через кому. Якщо жодна бібліотека не потрібна,"
+                "напиши замість <бібліотеки> 'Немає бібліотек.'"
+                " Замість <функції> має бути лише функції(задокоментовані). ")
 
     def _change_text(self, text: str) -> str:
         return text
@@ -54,4 +55,4 @@ class Maker(Role):
         else:
             self.__libraries = results[0].split(',')
         # return functions
-        return result[1]
+        return results[1]

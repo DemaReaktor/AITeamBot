@@ -1,7 +1,7 @@
-from env.Role import Role
+from env.Role import RoleWithTask
 
 
-class Realizer(Role):
+class Realizer(RoleWithTask):
     def system(self) -> str:
         return ("Тобі надається текст, його зміст:"
                 "'завдання:\"<текст>\",\n функції:\"<файл>\"'. Текст замість <файл> містить Python"
