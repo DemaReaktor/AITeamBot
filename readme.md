@@ -25,7 +25,7 @@ He uses ChatGPT.
 
 # Bot
 
-[Bot link](https://t.me/@AITeamMonologbot)
+[Bot link](https://t.me/k/#@AITeamMonologbot)
 
 *Bot name: AITeamBot
 *nickname: @AITeamMonologbot.
