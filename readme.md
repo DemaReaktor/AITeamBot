@@ -25,7 +25,7 @@ He uses ChatGPT.
 
 # Bot
 
-[Bot link](t.me/@AITeamMonologbot)
+[Bot link](https://t.me/@AITeamMonologbot)
 
 *Bot name: AITeamBot
 *nickname: @AITeamMonologbot.
@@ -41,7 +41,7 @@ If you just write a message, the bot will perceive it as a task that needs to be
 
 # Group-to-track-progress
 
-Link: [t.me/+erndqXxg-vZkMDNi](t.me/+erndqXxg-vZkMDNi).
+Link: [https://t.me/+erndqXxg-vZkMDNi](https://t.me/+erndqXxg-vZkMDNi).
 
 This is a special group where you can see how the bot creates roles that communicate with each other. Each role displays its role and its text in the message.
 
@@ -97,7 +97,7 @@ Functions.py stores all functions created by the command.
 
 # Бот
 
-[Посилання до бота](t.me/@AITeamMonologbot)
+[Посилання до бота](https://t.me/@AITeamMonologbot)
 
 *Назва бота: AITeamBot
 *нікнейм: @AITeamMonologbot.
@@ -113,7 +113,7 @@ Change Language: змінює мову з української на англі
 
 # Група-для-відстеження-прогресу
 
-Посилання: [t.me/+erndqXxg-vZkMDNi](t.me/+erndqXxg-vZkMDNi).
+Посилання: [https://t.me/+erndqXxg-vZkMDNi](https://t.me/+erndqXxg-vZkMDNi).
 
 Це спеціальна група, де видно, як бот створює ролі, які спілкуються між собою. Кожна роль виводить у повідомленні свою роль і свій текст.
 
