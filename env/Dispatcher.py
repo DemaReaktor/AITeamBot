@@ -97,7 +97,7 @@ async def solve_task(message: Message) -> None:
             text = await __send_message(creator, text, "Завантаження творця")
 
             # maker
-            maker = Maker(id)
+            maker = Maker(task_id)
             text = await __send_message(maker, text, "Завантаження розробника")
             # maker can recode functions after tester run tests
             maker.recode = True
