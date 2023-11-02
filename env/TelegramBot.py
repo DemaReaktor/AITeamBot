@@ -22,7 +22,7 @@ class LanguageBot(Bot):
             raise ValueError("you should first add this chat to bot")
 
     def change_language(self, chat_id: int):
-        """change language of chat from ukrainian to english and other against
+        """change language of chat from ukrainian to english and vice versa
         :raise ValueError if chat with this id is not added to bot using function add"""
         self.__validate_chat_id(chat_id)
         self.__is_ukrainian[chat_id] = not self.__is_ukrainian[chat_id]
@@ -32,6 +32,9 @@ class LanguageBot(Bot):
         :raise ValueError if chat with this id is not added to bot using function add"""
         self.__validate_chat_id(chat_id)
         return self.__is_ukrainian[chat_id]
+
+    def has_chat(self, chat_id: int) -> bool:
+        return chat_id in self.__is_ukrainian.keys()
 
 
 bot = LanguageBot(Config.BOT_TOKEN)

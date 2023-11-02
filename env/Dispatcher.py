@@ -1,5 +1,5 @@
-from aiogram import Dispatcher
-from aiogram.types import Message, ContentType
+from aiogram import Dispatcher, F
+from aiogram.types import Message, ContentType, CallbackQuery
 from TelegramBot import bot
 from Translater import translate as tr
 import Config
@@ -38,33 +38,48 @@ async def __send_message(role: Role, text: str, role_loading: str) -> str:
     return text
 
 
-@dispatcher.message()
+@dispatcher.message(F.text == '/id')
+async def id_command(message: Message) -> None:
+    print(message.chat.id)
+
+
+@dispatcher.message(F.text == '/start')
 async def start_command(message: Message) -> None:
     """write hello message when user use command /start"""
     bot.add(message.chat.id)
-    bot.send_message(message.chat.id, "Вітаю! Дайте будь-яке просте завдання, я його в в кілка секунд вирішу!"
+    await bot.send_message(message.chat.id, "Вітаю! Дайте будь-яке просте завдання, я його в в кілка секунд вирішу!"
                                       "(To see English write /change_language)")
 
 
-@dispatcher.message()
+@dispatcher.message(F.text == '/help')
 async def help_command(message: Message) -> None:
     """write useful information about bot when user use command /help"""
-    bot.send_message(message.chat.id, __translate("Напішть будь-яке просте завдання. Бот із затримкою його "
+    if not bot.has_chat(message.chat.id):
+        await bot.send_message(message.chat.id, "Спочатку напишіть /start")
+        return
+    await bot.send_message(message.chat.id, __translate("Напішть будь-яке просте завдання. Бот із затримкою його "
                                                   "виконає.\n\n Щоб змінити мову, напишіть команду /change_language."
                                                   "\n\n Також можна подивитись на прогрес бота, для цього треба зайти"
                                                   " в групу @teamaiupgrade", message.chat.id))
 
 
-@dispatcher.message()
+@dispatcher.message(F.text == '/change_language')
 async def change_language_command(message: Message) -> None:
     """change language of chat when user use command /change_language"""
+    if not bot.has_chat(message.chat.id):
+        await bot.send_message(message.chat.id, "Спочатку напишіть /start")
+        return
     bot.change_language(message.chat.id)
-    bot.send_message(message.chat.id, __translate("Мову змінено", message.chat.id))
+    await bot.send_message(message.chat.id, __translate("Мову змінено", message.chat.id))
 
 
-@dispatcher.message()
+@dispatcher.message(F.text.regexp(r'(?!\/id$|\/start$|\/help$|\/change_language$).*'))
 async def solve_task(message: Message) -> None:
     """do new code and write answer of task"""
+    await bot.send_message(message.chat.id, "++")
+    if not bot.has_chat(message.chat.id):
+        await bot.send_message(message.chat.id, "Спочатку напишіть /start")
+        return
     if message.content_type == ContentType.TEXT:
         new_message = await bot.send_message(message.chat.id, __translate("Завантаження...", message.chat.id))
         # initialize roles
