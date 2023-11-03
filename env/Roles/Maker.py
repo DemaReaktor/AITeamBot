@@ -1,10 +1,24 @@
-from env.Role import RoleWithTask
+from env.Role import RoleWithTask, validate_syntax
 
 
 class Maker(RoleWithTask):
     def __init__(self, *args, **kwargs):
         self.recode = False
         super().__init__(*args, **kwargs)
+
+    def validate_answer(self, text: str) -> bool:
+        if not self.recode:
+            # if not libraries
+            if not text.find(':'):
+                return False
+            # remove libraries
+            text = text.split(':', 1)[1]
+        return validate_syntax(text)
+
+    def assistant(self) -> str | None:
+        if self.recode:
+            return '<функції>'
+        return 'бібліотека1,бібліотека2,бібліотека3...бібліотека(n):<функції>'
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
@@ -20,9 +34,9 @@ class Maker(RoleWithTask):
         # he returns a list of libraries which will be used by functions.
         # If no one library is needed he will return 'Немає бібліотек'
         # he also returns a list of functions
-        return ("Тобі надається текст, який містить один або декілька через кому таких елементів:"
-                  " '{'name:\"<назва>\",'description:\"<опис>\"'}'. Текст замість <назва> містить"
-                  "назву функції, а замість <опис>  - опис функції. Уяви себе програмістом і напиши функції"
+        return ("Тобі надається json текст, який містить список об'єктів, кожен з яких має поле name i description. "
+                "Значення name містить назву функції, а значення description - опис функції."
+                " Уяви себе програмістом і напиши функції"
                 "на мові Python. Кожен елемент містить назву і опис функції, яка має бути написана."
                 "Кожна функція повина мати назву як назву у елементі. Функція повина мати документацію,"
                 " причому на англійській мові. Для написання функцій можна використовувати "
@@ -43,16 +57,16 @@ class Maker(RoleWithTask):
             return None
         return self.__libraries
 
-    def send_request(self, text: str) -> str:
+    def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
+        if result is None:
+            return None
         # get libraries and functions
         results = result.split(':', 1)
-        if not (len(results) == 2):
-            return result
         # get libraries
         if results[0] == 'Немає бібліотек':
             self.__libraries = None
         else:
             self.__libraries = results[0].split(',')
         # return functions
-        return results[1]
+        return results[1].replace('```', '')
