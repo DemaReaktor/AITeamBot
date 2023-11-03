@@ -25,7 +25,7 @@ He uses ChatGPT.
 
 # Bot
 
-[Link](https://t.me/@AITeamMonologbot)
+[Link](https://t.me/AITeamMonologbot)
 
 *Bot name: AITeamBot
 *nickname: @AITeamMonologbot.
@@ -97,7 +97,7 @@ Functions.py stores all functions created by the command.
 
 # Бот
 
-[Посилання](https://t.me/@AITeamMonologbot)
+[Посилання](https://t.me/AITeamMonologbot)
 
 *Назва бота: AITeamBot
 *нікнейм: @AITeamMonologbot.
