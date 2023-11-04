@@ -16,9 +16,9 @@ class Creator(RoleWithTask):
                 return False
         return True
 
-    def assistant(self) -> str | None:
-        return ('[{name: <name>, description: <description>}, {name: <name>, description: <description>},'
-                '{name: <name>, description: <description>}, {name: <name>, description: <description>}]')
+    def example(self) -> str | list | None:
+        return ('[{"name": "add", "description": "adds elements"}, {"name": "minus", "description": "minus elements"},'
+                '{"name": "multiply", "description": "multiplies elements"}]')
 
     def system(self) -> str:
         # checker should return a list which has elements as name of step and his description

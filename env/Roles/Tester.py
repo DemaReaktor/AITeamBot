@@ -16,8 +16,20 @@ class Tester(RoleWithTask):
             return False
         return validate_syntax(data['tests']) and (data['result'] == 'чисто' or validate_syntax(data['result']))
 
-    def assistant(self) -> str | None:
-        return '{"tests":"<код тестів>", "result":"чисто" або "<код неуспішних тестів>"}'
+    def example(self) -> str | list | None:
+        return [('{"tests":"def test_add(self):\n'
+                    '\tself.assertEqual(add(1.0, 2.0, 3.0), 6.0)\n'
+                    '\tself.assertEqual(add(0.0, 0.0, 0.0), 0.0)\n'
+                    '\tself.assertEqual(add(-1.0, -2.0, -3.0), -6.0)\n\n'
+                    'def test_minus(self):\n'
+                    '\tself.assertEqual(minus(5.0, 3.0, 1.0), 1.0)\n'
+                    '\tself.assertEqual(minus(10.0, 2.0, 3.0), 5.0)\n'
+                    '\tself.assertEqual(minus(0.0, 0.0, 0.0), 0.0)\n'
+                    '\tself.assertEqual(minus(-1.0, -2.0, -3.0), 4.0)", "result":"чисто"}'),
+                ('{"tests":"def test_multiply(self):\n'
+                 '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n", "result":"def test_multiply(self):\n'
+                 '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n"}')
+                ]
 
     def system(self):
         # tester get all functions

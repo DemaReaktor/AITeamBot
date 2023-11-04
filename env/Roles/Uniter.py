@@ -1,4 +1,3 @@
-
 from env.Role import RoleWithTask, validate_syntax
 import env.Functions as Functions
 
@@ -7,8 +6,14 @@ class Uniter(RoleWithTask):
     def validate_answer(self, text: str) -> bool:
         return validate_syntax(text)
 
-    def assistant(self) -> str | None:
-        return '<код Python>'
+    def example(self) ->  str | list | None:
+        return ('def add(a: float, b: float, c: float) -> float:\n'
+                    '\t""" adds elements""""\n'
+                    '\treturn a + b + c\n'
+                    '\n'
+                    'def minus(a: float, b: float, c: float) -> float:\n'
+                    '\t""" minus elements""""\n'
+                    '\treturn a - b - c\n')
 
     def system(self) -> str:
         # uniter gets old function in Function.py file and new functions

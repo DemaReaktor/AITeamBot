@@ -6,8 +6,8 @@ class Checker(RoleWithTask):
     def validate_answer(self, text: str) -> bool:
         return text in ['так', 'ні']
 
-    def assistant(self) -> str | None:
-        return 'так або ні'
+    def example(self) -> str | list | None:
+        return ['ні', 'так']
 
     def system(self) -> str:
         # checker should return yes if all needed functions already exist in file Functions to solve the task
@@ -18,7 +18,7 @@ class Checker(RoleWithTask):
                 "створити програму, яка буде розв'язувати подібні завдання."
                 " Треба зрозуміти чи можна за допомогою лише цих "
                   "Python функцій виконати завдання, без створення нового коду, а лише запустивши відразу "
-                "готову функцію. Якщо це неможливо, то відповідь має містити лише слово 'ні'. Інакше"
+                "готову функцію. Якщо це неможливо, то відповідь має містити лише слово 'ні'. Інакше "
                 "відповідь має містити лише слово 'так'")
 
     def _change_text(self, text: str) -> str:

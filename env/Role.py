@@ -8,14 +8,15 @@ import json
 
 
 def get_json(text: str) -> Any | None:
-    return json.loads(ast.literal_eval(json.dumps(text)))
+    return json.loads(ast.literal_eval(json.dumps(text)), strict=False)
 
 
 def validate_json(text: str) -> Any | None:
     try:
         # load json (ast.literal_eval(json.dumps()) need if properties have ' instead ")
-        return json.loads(ast.literal_eval(json.dumps(text)))
-    except():
+        print(text)
+        return json.loads(ast.literal_eval(json.dumps(text)), strict=False)
+    except json.JSONDecodeError:
         return None
 
 
@@ -49,8 +50,8 @@ class Role(abc.ABC):
         """check ChatGPT answer is right as role need to answer"""
         return True
 
-    def assistant(self) -> str | None:
-        """an answer of ChatGpt which should be similar"""
+    def example(self) -> list[str] | str | None:
+        """an example of ChatGpt to write answer"""
         return None
 
     @abc.abstractmethod
@@ -67,7 +68,14 @@ class Role(abc.ABC):
         :param text is a question which you want to set to the ChatGPT
         :return an answer of the request if answer was validated otherwise None"""
         validate_text(text)
-        result = OpenAIAPI.send_request(self.system(), self._change_text(text), self.assistant(), self.__model)
+        text_request = self.system()
+        example = self.example()
+        if not (example is None):
+            if isinstance(example, str):
+                text_request += " Приклад результату: " + example
+            else:
+                text_request += " Приклад результату: " + ' .\nЩе приклад: '.join(example).removesuffix(' .\nЩе приклад: ')
+        result = OpenAIAPI.send_request(text_request, self._change_text(text), self.__model)
         if self.validate_answer(result):
             return result
         print(f"validation failed: {type(self)}, text:{result}")

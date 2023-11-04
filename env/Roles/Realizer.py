@@ -3,8 +3,8 @@ import env.Functions as Functions
 
 
 class Realizer(RoleWithTask):
-    def assistant(self) -> str | None:
-        return "<відповідь розв'язання>"
+    def example(self) -> str | list | None:
+        return ["5", "Так", "01.04.2020"]
 
     def system(self) -> str:
         return ("Тобі надається текст, його зміст:"

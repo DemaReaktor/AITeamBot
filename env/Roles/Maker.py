@@ -22,10 +22,33 @@ class Maker(RoleWithTask):
             text = data['functions']
         return validate_syntax(text.removesuffix('```').removesuffix('python'))
 
-    def assistant(self) -> str | None:
+    example_text = ('def add(a: float, b: float, c: float) -> float:\n'
+                    '\t""" adds elements""""\n'
+                    '\treturn a + b + c\n'
+                    '\n'
+                    'def minus(a: float, b: float, c: float) -> float:\n'
+                    '\t""" minus elements""""\n'
+                    '\treturn a - b - c\n')
+
+    def example(self) -> str | list | None:
         if self.recode:
-            return '<функції>'
-        return '{"libraries": [бібліотека1,бібліотека2,бібліотека3...бібліотека(n)], "functions": "<функції>"}'
+            return Maker.example_text
+        return ['{"libraries": [], "functions": "'+Maker.example_text+'"}',
+                '{"libraries": [json,openai], "functions": "'+Maker.example_text+'\n\n'
+                'def generate_and_save_text(prompt, max_tokens=50,'
+                                    'output_file="generated_text.json"):\ntry:\nopenai.api_key = "API_OPENAI"\n'
+                                   '\nresponse = openai.Completion.create(\nengine="text-davinci-002",\nprompt=prompt,'
+                                   '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
+                                   'with open(output_file, "w") as file:\njson.dump({"prompt": prompt, '
+                                   '"generated_text": generated_text}, file)\n\nreturn generated_text\n\n'
+                                   'except Exception as e:\nreturn str(e)\n\n"}']
+
+    generate_and_save_text_code = ('output_file="generated_text.json"):\ntry:\nopenai.api_key = "ВАШ_КЛЮЧ_API_OPENAI"\n'
+                                   '\nresponse = openai.Completion.create(\nengine="text-davinci-002",\nprompt=prompt,'
+                                   '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
+                                   'with open(output_file, "w") as file:\njson.dump({"prompt": prompt, '
+                                   '"generated_text": generated_text}, file)\n\nreturn generated_text\n\n'
+                                   'except Exception as e:\nreturn str(e)\n\n')
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
