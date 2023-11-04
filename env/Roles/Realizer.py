@@ -15,3 +15,4 @@ class Realizer(RoleWithTask):
     def _change_text(self, text: str) -> str:
         file_text = open(Functions.__file__, "rb").readlines()
         return f"завдання:\"{text}\",\n функції:\"{file_text}\""
+

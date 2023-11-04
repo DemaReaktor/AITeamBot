@@ -1,24 +1,31 @@
-from env.Role import RoleWithTask, validate_syntax
+from env.Role import RoleWithTask, validate_syntax, validate_json, get_json
 
 
 class Maker(RoleWithTask):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, task_id: int):
         self.recode = False
-        super().__init__(*args, **kwargs)
+        super().__init__(task_id, "gpt-3.5-turbo-16k")
 
     def validate_answer(self, text: str) -> bool:
         if not self.recode:
-            # if not libraries
-            if not text.find(':'):
+            data = validate_json(text)
+            if data is None or not isinstance(data, dict):
                 return False
-            # remove libraries
-            text = text.split(':', 1)[1]
-        return validate_syntax(text)
+            # if no properties
+            if not ('libraries' in data) or not ('functions' in data) or not isinstance(data['libraries'], list):
+                return False
+            if not isinstance(data['functions'], str):
+                return False
+            for element in data['libraries']:
+                if not isinstance(element, str):
+                    return False
+            text = data['functions']
+        return validate_syntax(text.removesuffix('```').removesuffix('python'))
 
     def assistant(self) -> str | None:
         if self.recode:
             return '<функції>'
-        return 'бібліотека1,бібліотека2,бібліотека3...бібліотека(n):<функції>'
+        return '{"libraries": [бібліотека1,бібліотека2,бібліотека3...бібліотека(n)], "functions": "<функції>"}'
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
@@ -38,16 +45,13 @@ class Maker(RoleWithTask):
                 "Значення name містить назву функції, а значення description - опис функції."
                 " Уяви себе програмістом і напиши функції"
                 "на мові Python. Кожен елемент містить назву і опис функції, яка має бути написана."
-                "Кожна функція повина мати назву як назву у елементі. Функція повина мати документацію,"
-                " причому на англійській мові. Для написання функцій можна використовувати "
-                "бібліотеки Python, а також OpenAI API. Відповідь потрібно написати за таким форматом: "
-                "'<бібліотеки>: <функції>'. Замість <бібліотеки> мають бути написані бібліотеки "
-                "через кому, але якщо жодна бібліотека не потрібна, тоді"
-                "напиши замість <бібліотеки> 'Немає бібліотек.'"
-                " Замість <функції> має бути лише функції(задокоментовані). ")
-
-    def _change_text(self, text: str) -> str:
-        return text
+                "Кожна функція повина мати назву як назву у елементі. Функція повина мати детальну документацію. "
+                "Для написання функцій можна використовувати "
+                "бібліотеки Python, а також OpenAI API. У відповідь написати json текст, який містить один об'єкт."
+                "Об'єкт містить поле libraries, значення якого має бути json список бібліотек, які використовуються("
+                "якщо жодні бібліотеки не використовуються, то просто має бути порожній список)."
+                "Також об'єкт повинен мати поле functions, "
+                "значення якого має бути json текст, що містить лише функцій(задокоментовані).")
 
     @property
     def libraries(self) -> list[str] | None:
@@ -62,11 +66,11 @@ class Maker(RoleWithTask):
         if result is None:
             return None
         # get libraries and functions
-        results = result.split(':', 1)
+        data = get_json(result)
         # get libraries
-        if results[0] == 'Немає бібліотек':
+        if len(data['libraries']) == 0:
             self.__libraries = None
         else:
-            self.__libraries = results[0].split(',')
+            self.__libraries = data['libraries']
         # return functions
-        return results[1].replace('```', '')
+        return data['functions'].replace('```', '').removesuffix('python')

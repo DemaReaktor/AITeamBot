@@ -1,17 +1,23 @@
-from env.Role import RoleWithTask, validate_syntax
+from env.Role import RoleWithTask, validate_syntax, validate_json, get_json
 
 
 class Tester(RoleWithTask):
+    def __init__(self, task_id: int):
+        super().__init__(task_id, "gpt-3.5-turbo-16k")
+
     def validate_answer(self, text: str) -> bool:
-        # not valid if text doesnt have tests and answer
-        if text.find('\n#-1-1-1-1-1-1-1-1\n') == -1:
+        data = validate_json(text)
+        if data is None or not isinstance(data, dict):
             return False
-        results = text.split('\n#-1-1-1-1-1-1-1-1\n', 1)
-        # validate tests and answer
-        return validate_syntax(results[0]) and (results[1] == 'чисто' or validate_syntax(results[1]))
+        # if no properties
+        if not ('tests' in data) or not ('result' in data):
+            return False
+        if not isinstance(data['tests'], str) or not isinstance(data['result'], str):
+            return False
+        return validate_syntax(data['tests']) and (data['result'] == 'чисто' or validate_syntax(data['result']))
 
     def assistant(self) -> str | None:
-        return '<код тестів>\n#-1-1-1-1-1-1-1-1\n(чисто або <код неуспішних тестів>)'
+        return '{"tests":"<код тестів>", "result":"чисто" або "<код неуспішних тестів>"}'
 
     def system(self):
         # tester get all functions
@@ -19,31 +25,29 @@ class Tester(RoleWithTask):
         # he also returns all tests that fall during running
         # if no one test fall he returns 'чисто'
         return ("Тобі надаються функції мови Python. Уяви себе тестером. Створи unit-тести "
-                "для кожної функції. Потім запусти їх. Виведи усі тести і результат. Відповіть повина бути така:"
-                "'<тести>\n#-1-1-1-1-1-1-1-1\n<результат>', де замість <тести> мають бути написаний код тестів. "
-                "Замість <результат> має бути слово 'чисто' якщо всі тести пройшли успішно. Якщо "
-                "хоча б один тест не пройшов успішно, замість <результат> виведи код тестів,"
-                " які не пройшли успішно.")
-
-    def _change_text(self, text: str) -> str:
-        return text
+                "для кожної функції. Потім запусти їх. Виведи усі тести і результат. У відповідь впиши json текст,"
+                "який містить один об'єкт. Цей об'єкт містить поле tests, значення якого текст, у якому "
+                "має бути написаний код тестів. "
+                "Також об'єкт містить поле result, значення якого має бути слово 'чисто' якщо всі тести пройшли"
+                " успішно. Якщо хоча б один тест не пройшов успішно, поле result містите текст, у якому має бути"
+                " код тестів, які не пройшли успішно.")
 
     def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
         if result is None:
             return None
         # get tests and fall tests
-        results = result.rsplit('\n#-1-1-1-1-1-1-1-1\n', 1)
+        data = get_json(text)
         # get fall tests
-        if results[1] == 'чисто':
+        if data['result'] == 'чисто':
             self.__test_falls = None
         else:
-            self.__test_falls = results[1].split(',')
+            self.__test_falls = data['result']
         # return all tests
-        return results[0]
+        return data['tests']
 
     @property
-    def test_falls(self) -> list[str] | None:
+    def test_falls(self) -> str | None:
         """get all tests which fall during running them
         :return fall tests. If falls tests don`t exist return None"""
         if not hasattr(self, '__test_falls'):

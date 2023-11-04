@@ -119,7 +119,7 @@ async def solve_task(message: Message) -> None:
                     break
 
                 # maker with recode
-                text = await __send_message(maker, ','.join(tester.test_falls) +
+                text = await __send_message(maker, tester.test_falls +
                                             "\r\n#-----------------\r\n" + text, "Завантаження розробника")
             # uniter
             text = await __send_message(uniter, text, "Завантаження головного розробника")
