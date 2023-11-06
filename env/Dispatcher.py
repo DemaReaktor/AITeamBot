@@ -162,9 +162,11 @@ async def solve_task(message: Message) -> None:
                                              message.chat.id), message.chat.id)
                 return
             text = getattr(Functions, function_name)(**realizer.kwargs)
-        if hasattr(Functions, function_name+"_to_binaryio"):
+        if isinstance(text, BinaryIO):
             await bot.edit_message_text(__translate("Ось тут потрібний "
                                                     "вам файл", chat_id), chat_id, new_message.message_id)
-            await bot.send_document(chat_id, getattr(Functions, function_name+"_to_binaryio")(value=text))
+            await bot.send_document(chat_id, text)
+        elif isinstance(text, str):
+            await bot.edit_message_text(__translate(text, chat_id), chat_id, new_message.message_id)
         else:
-            await bot.edit_message_text(__translate(str(text), chat_id), chat_id, new_message.message_id)
+            await bot.edit_message_text(__translate("сталася помилка", chat_id), chat_id, new_message.message_id)
