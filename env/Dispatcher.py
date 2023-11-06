@@ -1,8 +1,9 @@
 from aiogram import Dispatcher, F
+from openai.error import OpenAIError, RateLimitError, ServiceUnavailableError
 from aiogram.types import Message, ContentType, BufferedInputFile
 from TelegramBot import bot
 from Translater import translate as tr
-from typing import BinaryIO
+from typing import BinaryIO, Type
 import Config
 import pip
 
@@ -72,19 +73,22 @@ async def empty_message(message: Message) -> None:
     await bot.send_message(message.chat.id, __translate("Ви маєте написати завдання", message.chat.id))
 
 
-async def __send_message(role: RoleWithTask, text: str, role_loading: str) -> str:
+async def __send_message(role: RoleWithTask, text: str, role_loading: str) -> str | Type:
     """send a message to group (text is role_loading). Then send request to the ChatGPT and get answer.
     In the end change a text of the message to the answer of the request and return the answer"""
-    new_message = await bot.send_message(Config.GROUP_ID, __translate(role_loading, role.chat_id))
+    new_message = await bot.send_message(Config.GROUP_ID, role_loading)
     # while answer is not validated
     while True:
         new_text = role.send_request(text)
+        if isinstance(new_text, type):
+            await bot.send_message(Config.GROUP_ID, f"помилка:{str(new_text)}")
+            return new_text
         if not (new_text is None):
             break
-        await bot.send_message(Config.GROUP_ID, __translate(f"відповідь не по формату(роль:{role_names[type(role)]},"
-                                                f" task id:{role.task_id}", role.chat_id))
-    await bot.edit_message_text(__translate(role_names[type(role)] + f"\n\nTask id:{role.task_id}\n\n"
-                                + new_text, role.chat_id), Config.GROUP_ID, new_message.message_id)
+        await bot.send_message(Config.GROUP_ID, f"відповідь не по формату(роль:{role_names[type(role)]},"
+                                                f" task id:{role.task_id}")
+    await bot.edit_message_text(role_names[type(role)] + f"\n\nTask id:{role.task_id}\n\n"
+                                + new_text, Config.GROUP_ID, new_message.message_id)
     return new_text
 
 
@@ -112,15 +116,24 @@ async def solve_task(message: Message) -> None:
         while True:
             # checker
             answer = await __send_message(checker, message_text, "Завантаження валідатора")
+            if isinstance(answer, type):
+                return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                                   "5 хв", chat_id))
             if answer == 'так':
                 break
 
             # creator
             text = await __send_message(creator, message_text, "Завантаження творця")
+            if isinstance(text, type):
+                return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                                   "5 хв", chat_id))
 
             # maker
             maker = Maker(task_id, chat_id)
             text = await __send_message(maker, text, "Завантаження розробника")
+            if isinstance(text, type):
+                return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                                   "5 хв", chat_id))
             # maker can recode functions after tester run tests
             maker.recode = True
 
@@ -129,6 +142,9 @@ async def solve_task(message: Message) -> None:
             # while tester has tests that fall during running
             while True:
                 await __send_message(tester, text, "Завантаження тестера")
+                if isinstance(text, type):
+                    return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                                       "5 хв", chat_id))
                 if tester.test_falls is None:
                     break
 
@@ -137,6 +153,9 @@ async def solve_task(message: Message) -> None:
                                             "\r\n#-----------------\r\n" + text, "Завантаження розробника")
             # uniter
             text = await __send_message(uniter, text, "Завантаження головного розробника")
+            if isinstance(text, type):
+                return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                                   "5 хв", chat_id))
             # save all functions
             if not(maker.libraries is None):
                 for library in maker.libraries:
@@ -153,6 +172,9 @@ async def solve_task(message: Message) -> None:
 
         # realizer
         function_name = await __send_message(realizer, message_text, "Завантаження виконувача")
+        if isinstance(text, type):
+            return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
+                                                               "5 хв", chat_id))
         import Functions
         if realizer.kwargs is None:
             text = getattr(Functions, function_name)()

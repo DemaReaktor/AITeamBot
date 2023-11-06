@@ -1,8 +1,9 @@
+from openai.error import OpenAIError
 import OpenAIAPI
 from validation import validate_text, validate_int
 import abc
 import ast
-from typing import Any
+from typing import Any, Type
 import json
 
 
@@ -61,7 +62,7 @@ class Role(abc.ABC):
         """change text before it will be used for ChatGPT`s request"""
         return text
 
-    def send_request(self, text: str) -> str | None:
+    def send_request(self, text: str) -> str | None | Type[OpenAIError]:
         """send a request to the ChatGPT
         :param text is a question which you want to set to the ChatGPT
         :return an answer of the request if answer was validated otherwise None"""
@@ -72,8 +73,11 @@ class Role(abc.ABC):
             if isinstance(example, str):
                 text_request += " Приклад результату: " + example
             else:
-                text_request += " Приклад результату: " + ' .\nЩе приклад: '.join(example).removesuffix(' .\nЩе приклад: ')
-        result = OpenAIAPI.send_request(text_request, self._change_text(text), self.__model)
+                text_request += (" Приклад відповіді: " + ' .\nЩе приклад відповіді: '.join(example).
+                                 removesuffix(' .\nЩе приклад відповіді: '))
+        result = OpenAIAPI.try_send_request(text_request, self._change_text(text), self.__model)
+        if not isinstance(result, str):
+            return result
         if self.validate_answer(result):
             return result
         print(f"validation failed: {type(self)}, system:{text_request}, text:{result}")

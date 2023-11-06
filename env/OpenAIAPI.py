@@ -1,6 +1,8 @@
 import openai
 import Config
+from typing import Type
 from validation import validate_text
+from openai.error import RateLimitError, ServiceUnavailableError, OpenAIError
 
 
 openai.api_key = Config.API_KEY
@@ -19,3 +21,12 @@ def send_request(system: str, content: str, model: str = "gpt-3.5-turbo") -> str
         {"role": "user", "content": content},
         ])
     return completion.choices[0].message.content
+
+
+def try_send_request(system: str, content: str, model: str = "gpt-3.5-turbo") -> str | Type[OpenAIError]:
+    try:
+        return send_request(system, content, model)
+    except RateLimitError:
+        return RateLimitError
+    except ServiceUnavailableError:
+        return ServiceUnavailableError
