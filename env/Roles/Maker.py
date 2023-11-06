@@ -23,11 +23,11 @@ class Maker(RoleWithTask):
         return validate_syntax(text.removesuffix('```').removesuffix('python'))
 
     example_text = ('def add(a: float, b: float, c: float) -> float:\n'
-                    '\t""" adds elements""""\n'
+                    '\t\\"\\"\\" adds elements\\"\\"\\"\n'
                     '\treturn a + b + c\n'
                     '\n'
                     'def minus(a: float, b: float, c: float) -> float:\n'
-                    '\t""" minus elements""""\n'
+                    '\t\\"\\"\\" minus elements\\"\\"\\"\n'
                     '\treturn add(a, -b, -c)\n')
 
     def example(self) -> str | list[str] | None:
@@ -36,15 +36,15 @@ class Maker(RoleWithTask):
         return ['{"libraries": [], "functions": "'+Maker.example_text+'"}',
                 '{"libraries": [json,openai], "functions": "'+Maker.example_text+'\n\n'
                 'import json\nimport openai\ndef generate_and_save_text(prompt, max_tokens=50,'
-                                    'output_file="generated_text.json"):\ntry:\nopenai.api_key = "API_OPENAI"\n'
-                                   '\nresponse = openai.Completion.create(\nengine="text-davinci-002",\nprompt=prompt,'
+                                    'output_file=\\"generated_text.json\\"):\ntry:\nopenai.api_key = \\"API_OPENAI\\"\n'
+                                   '\nresponse = openai.Completion.create(\nengine=\\"text-davinci-002\\",\nprompt=prompt,'
                                    '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
-                                   'with open(output_file, "w") as file:\njson.dump({"prompt": prompt, '
-                                   '"generated_text": generated_text}, file)\n\nreturn generated_text\n\n'
+                                   'with open(output_file, \\"w\\") as file:\njson.dump({\\"prompt\\": prompt, '
+                                   '\\"generated_text\\": generated_text}, file)\n\nreturn generated_text\n\n'
                                    'except Exception as e:\nreturn str(e)\n\n'
                                     'def generate_and_save_text_to_binaryio(generated_text):\n'
                                     '\toutput_binary_io = io.BytesIO()\n'
-                                    '\toutput_binary_io.write(generated_text.encode("utf-8"))\n'
+                                    '\toutput_binary_io.write(generated_text.encode(\\"utf-8\\"))\n'
                                     '\toutput_binary_io.seek(0)\n'
                                     '\treturn output_binary_io"}']
 
@@ -59,11 +59,10 @@ class Maker(RoleWithTask):
                    "код функцій, щоб не було багів, через які спрацьовують тести."
                    " Виконай усі умови:"
                    "\n1. Виправ функції, щоб усі тести проходили."
-                   "\n2. Кожна функція повинна використовувати попередньо створену функцію(2га функція використовує "
-                   "1шу функцію, а 3тя функція використовує 2гу функцію і так далі)."
-                   "\n3. У відповідь записати лише код усіх функцій разом з їхніми імпортованими модулями."
-                   "\n4. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
-                   "\n5. У відповіді немає нічого бути крім коду функцій та імпортованих модулів."
+                   "\n2. У відповідь записати лише код усіх функцій разом з їхніми імпортованими модулями."
+                   "\n3. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
+                   "\n4. У відповіді немає нічого бути крім коду функцій та імпортованих модулів."
+                   "\n5. У тексті функцій перед усіма \" мають стояти \\."
                    "\n Усі умови повинні виконуватись.")
         # maker has names and descriptions of functions which he should write
         # he returns a list of libraries which will be used by functions.
@@ -79,26 +78,33 @@ class Maker(RoleWithTask):
                 "\n5. Якщо завдання у описі об'єкта можна реалізувати за допомогою OpenAI API, тоді використовуати"
                 "OpenAI API."
                 "\n6. Можна використовувати будь які бібліотеки Python."
-                "\n7. Кожна функція повинна використовувати попередньо створену функцію(2га функція використовує "
+                "\n7. Кожна функція повинна використовувати попередню створену функцію у себе в коді"
+                   "(2га функція використовує "
+                   "1шу функцію, а 3тя функція використовує 2гу функцію і так далі). Наприклад: функція minus "
+                   "використовує попередню функцію add: def minus(a,b,c):\n\treturn add(a,b,c)"
                 "1шу функцію, а 3тя функція використовує 2гу функцію і так далі)."
                 "\n8. Останя функція повинна повертати об'єкт типу str або BinaryIO об'єкт в залежності від того,"
                 "що вимагається в описі. Якщо опис вказує на повернення файлу, об'єкт, який має повернути функція,"
                 "має бути типу BinaryIO, інакше str."
-                "\n9. У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i functions."
-                "\n10. Якщо функції не використовують жодну бібліотеку, поле libraries повинно мати порожній список."
-                "\n11. Якщо функції використовують бібліотеку або бібліотеки, поле libraries повинно мати список,"
+                "\n9. Якщо якась функція вимагає отримати в параметрі файл, назва параметру має бути file, а тип "
+                "параметру BinaryIO."
+                "\n10. У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i functions."
+                "\n11. Якщо функції не використовують жодну бібліотеку, поле libraries повинно мати порожній список."
+                "\n12. Якщо функції використовують бібліотеку або бібліотеки, поле libraries повинно мати список,"
                 "який містить усі використані бібліотеки."
-                "\n12. Поле functions повиннен мати код функцій разом усіма імпортованими бібліотеками."
-                "\n13. Функція останього опису повиннен повертати значення типу str або BinaryIO"
-                "\n14. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
-                "\n15. У відповіді немає нічого бути крім json текста."
-                "\n Усі умови повинні виконуватись.")
+                "\n13. Поле functions повиннен мати код функцій разом усіма імпортованими бібліотеками."
+                "\n14. У тексті функцій перед усіма \" мають стояти \\."
+                "\n15. Функція останього опису повиннен повертати значення типу str або BinaryIO"
+                "\n16. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
+                "\n17. Кожна наступна функція повинна використовувати попередню або попередні функції."
+                "\n18. У відповіді немає нічого бути крім json."
+                "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json!!! ")
 
     @property
     def libraries(self) -> list[str] | None:
         """get a list of libraries which are used in code of the last request
         :return a list of libraries. If libraries are not needed return None"""
-        if not hasattr(self, '__libraries'):
+        if not hasattr(self, '_Maker__libraries'):
             return None
         return self.__libraries
 

@@ -41,8 +41,7 @@ class Realizer(RoleWithTask):
                 "\n6. Якщо функція не має параметрів, поле args повинно мати значення 'пусто'"
                 "\n7. Якщо функція має параметри, поле args повинно містити об'єкт. Цей об'єкт повиннен містити поля,"
                 " назва кожного поля є назва"
-                " відповідного параметру, значення кожного поля є дані, які ти визначив у 2 пункті. Якщо є параметр "
-                "file, має бути поле file із значенням 'file_data'."
+                " відповідного параметру, значення кожного поля є дані, які ти визначив у 2 пункті. "
                 "\n8. Кількість полей в об'єкті має дорівнювати кількості параметрів функції."
                 "\n9. У відповіді немає нічого бути крім json."
                 "\n Усі умови повинні виконуватись. Наголошую, відповідь повинна містити лише json!!! ")
@@ -55,7 +54,7 @@ class Realizer(RoleWithTask):
     def kwargs(self) -> dict[str, Any] | None:
         """get a dictionary of parameters which are used with function
         :return a dictionary of parameters. If args are not needed return None"""
-        if not hasattr(self, '__args'):
+        if not hasattr(self, '_Realizer__kwargs'):
             return None
         return self.__kwargs
 

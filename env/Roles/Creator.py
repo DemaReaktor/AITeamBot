@@ -8,8 +8,10 @@ class Creator(RoleWithTask):
     def validate_answer(self, text: str) -> bool:
         # validate json
         data = validate_json(text)
-        if data is None or not isinstance(data, list):
+        if data is None or not isinstance(data, list) and not isinstance(data, dict):
             return False
+        if isinstance(data, dict):
+            return ('name' in data) and ('description' in data)
         for element in data:
             # if no needed properties
             if not ('name' in element) or not ('description' in element):
@@ -20,18 +22,20 @@ class Creator(RoleWithTask):
         return [('[{"name": "add", "description": "adds elements"}, {"name": "minus", "description": "minus elements"},'
                 '{"name": "multiply", "description": "multiplies elements"}]'),
                 '[{"name":"random int","description":"return random int"},{"name":"range","description":"set int '
-                'into range"}]']
+                'into range"}]',
+                '[{"name":"photo_to_binaryio",'
+                '"description":"convert object of type Image into object of type BinaryIO"}]']
 
     def system(self) -> str:
         # checker should return a list which has elements as name of step and his description
         return ("Тобі надається текст завдання. Треба розбити завдання на прості кроки."
                 " Виконай усі умови:"
                 "\n1. Створи список послідовних кроків."
-                "\n2. У відповідь записати лише json, який містить список."
+                "\n2. У відповідь записати лише json файл, який містить список."
                 "\n3. Кожен об'єкт у списку повиннен мати два поля: name i description."
                 "\n4. Поле name повинно мати назву відповідного кроку."
                 "\n5. Поле description повинно мати опис відповідного кроку."
                 "\n6. Значення полей name i description мають бути написанні англійською мовою."
-                "\n7. У відповіді немає нічого бути крім json текста."
-                "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json!!! ")
+                "\n7. У відповіді немає нічого бути крім json файла."
+                "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json файл!!! ")
 

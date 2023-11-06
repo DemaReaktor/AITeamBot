@@ -45,7 +45,8 @@ class Tester(RoleWithTask):
                 "\n3. Запусти усі тести, визнач, які тести були неуспішними."
                 "\n4. Якщо є хоча б один неуспішний тест, поле result повинно мати код усіх неуспішних тестів."
                 "\n5. Якщо ж немає неуспішних тестів, у поле result вписати лише слово 'чисто'."
-                "\n6. У відповіді немає нічого бути крім json текста."
+                "\n6. У відповіді немає нічого бути крім json."
+                "\n7. У тексті функцій перед усіма \" мають стояти \\."
                 "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json!!!")
 
     def send_request(self, text: str) -> str | None:
@@ -66,6 +67,6 @@ class Tester(RoleWithTask):
     def test_falls(self) -> str | None:
         """get all tests which fall during running them
         :return fall tests. If falls tests don`t exist return None"""
-        if not hasattr(self, '__test_falls'):
+        if not hasattr(self, '_Tester__test_falls'):
             return None
         return self.__test_falls

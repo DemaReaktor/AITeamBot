@@ -2,6 +2,7 @@ from aiogram import Dispatcher, F
 from openai.error import OpenAIError, RateLimitError, ServiceUnavailableError
 from aiogram.types import Message, ContentType, BufferedInputFile
 from TelegramBot import bot
+import importlib
 from Translater import translate as tr
 from typing import BinaryIO, Type
 import Config
@@ -165,25 +166,32 @@ async def solve_task(message: Message) -> None:
                 file.write(text)
 
         # get text of file
+        file = None
         if not (message.document is None):
-            file_id = await bot.get_file(message.document.file_id)
-            result = await bot.download_file(file_id)
+            file = await bot.get_file(message.document.file_id)
+            result = await bot.download_file(file.file_path)
             file = BufferedInputFile(result, f"{chat_id}_{message.message_id}")
 
         # realizer
         function_name = await __send_message(realizer, message_text, "Завантаження виконувача")
-        if isinstance(text, type):
+        if isinstance(function_name, type):
             return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
                                                                "5 хв", chat_id))
-        import Functions
+        functions = importlib.import_module("Functions")
+        importlib.reload(functions)
         if realizer.kwargs is None:
-            text = getattr(Functions, function_name)()
+            text = getattr(functions, function_name)()
         else:
-            if 'file' in realizer.kwargs and not('file' in getattr(Functions, function_name).__code__.co_varnames):
+            if 'file' in getattr(functions, function_name).__code__.co_varnames and file is None:
                 bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
                                              message.chat.id), message.chat.id)
                 return
-            text = getattr(Functions, function_name)(**realizer.kwargs)
+            if 'file' in realizer.kwargs:
+                data = realizer.kwargs
+                data.pop('file')
+                text = getattr(functions, function_name)(file, **realizer.kwargs)
+            else:
+                text = getattr(functions, function_name)(**realizer.kwargs)
         if isinstance(text, BinaryIO):
             await bot.edit_message_text(__translate("Ось тут потрібний "
                                                     "вам файл", chat_id), chat_id, new_message.message_id)
@@ -191,4 +199,4 @@ async def solve_task(message: Message) -> None:
         elif isinstance(text, str):
             await bot.edit_message_text(__translate(text, chat_id), chat_id, new_message.message_id)
         else:
-            await bot.edit_message_text(__translate("сталася помилка", chat_id), chat_id, new_message.message_id)
+            await bot.edit_message_text(__translate(str(text), chat_id), chat_id, new_message.message_id)
