@@ -152,19 +152,19 @@ async def solve_task(message: Message) -> None:
             file = BufferedInputFile(result, f"{chat_id}_{message.message_id}")
 
         # realizer
-        text = await __send_message(realizer, message_text, "Завантаження виконувача")
+        function_name = await __send_message(realizer, message_text, "Завантаження виконувача")
         import Functions
         if realizer.kwargs is None:
-            text = getattr(Functions, text)()
+            text = getattr(Functions, function_name)()
         else:
-            if 'file' in realizer.kwargs and not('file' in getattr(Functions, text).__code__.co_varnames):
+            if 'file' in realizer.kwargs and not('file' in getattr(Functions, function_name).__code__.co_varnames):
                 bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
                                              message.chat.id), message.chat.id)
                 return
-            text = getattr(Functions, text)(**realizer.kwargs)
-        if isinstance(text, str):
-            await bot.edit_message_text(__translate(text, chat_id), chat_id, new_message.message_id)
-        elif isinstance(text, BinaryIO) or issubclass(text, BinaryIO):
+            text = getattr(Functions, function_name)(**realizer.kwargs)
+        if hasattr(Functions, function_name+"_to_binaryio"):
             await bot.edit_message_text(__translate("Ось тут потрібний "
                                                     "вам файл", chat_id), chat_id, new_message.message_id)
-            await bot.send_document(chat_id, )
+            await bot.send_document(chat_id, getattr(Functions, function_name+"_to_binaryio")(value=text))
+        else:
+            await bot.edit_message_text(__translate(str(text), chat_id), chat_id, new_message.message_id)
