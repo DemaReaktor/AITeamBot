@@ -1,6 +1,5 @@
 import OpenAIAPI
 from validation import validate_text, validate_int
-import inspect
 import abc
 import ast
 from typing import Any
@@ -14,7 +13,6 @@ def get_json(text: str) -> Any | None:
 def validate_json(text: str) -> Any | None:
     try:
         # load json (ast.literal_eval(json.dumps()) need if properties have ' instead ")
-        print(text)
         return json.loads(ast.literal_eval(json.dumps(text)), strict=False)
     except json.JSONDecodeError:
         return None
@@ -78,18 +76,25 @@ class Role(abc.ABC):
         result = OpenAIAPI.send_request(text_request, self._change_text(text), self.__model)
         if self.validate_answer(result):
             return result
-        print(f"validation failed: {type(self)}, text:{result}")
+        print(f"validation failed: {type(self)}, system:{text_request}, text:{result}")
         return None
 
 
 class RoleWithTask(Role, abc.ABC):
-    """Role which save id of task"""
-    def __init__(self, task_id: int, *args, **kwargs):
+    """Role which save data about task"""
+    def __init__(self, task_id: int, chat_id: int, *args, **kwargs):
         validate_int(task_id)
+        validate_int(chat_id)
         self.__id = task_id
+        self.__chat_id = chat_id
         super().__init__(*args, **kwargs)
 
     @property
-    def task_id(self):
+    def task_id(self) -> int:
         """id of task role are created for"""
         return self.__id
+
+    @property
+    def chat_id(self) -> int:
+        """id of chat where role are created"""
+        return self.__chat_id

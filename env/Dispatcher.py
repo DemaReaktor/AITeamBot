@@ -1,9 +1,10 @@
 from aiogram import Dispatcher, F
-from aiogram.types import Message, ContentType
+from aiogram.types import Message, ContentType, BufferedInputFile
 from TelegramBot import bot
 from Translater import translate as tr
+from typing import BinaryIO
 import Config
-import Functions
+import pip
 
 from Role import RoleWithTask
 # roles
@@ -60,20 +61,30 @@ role_names = {Checker: 'Валідатор', Creator: 'Творець', Maker: '
               Tester: 'Тестер', Uniter: 'Головний розробник'}
 
 
+@dispatcher.message(F.text == None)
+# get messages with no text
+async def empty_message(message: Message) -> None:
+    if not bot.has_chat(message.chat.id):
+        await bot.send_message(message.chat.id, "Спочатку напишіть /start")
+        return
+    if not (message.md_text == ''):
+        return await solve_task(message)
+    await bot.send_message(message.chat.id, __translate("Ви маєте написати завдання", message.chat.id))
+
+
 async def __send_message(role: RoleWithTask, text: str, role_loading: str) -> str:
     """send a message to group (text is role_loading). Then send request to the ChatGPT and get answer.
     In the end change a text of the message to the answer of the request and return the answer"""
-    new_message = await bot.send_message(Config.GROUP_ID, role_loading)
+    new_message = await bot.send_message(Config.GROUP_ID, __translate(role_loading, role.chat_id))
     # while answer is not validated
     while True:
-
         new_text = role.send_request(text)
         if not (new_text is None):
             break
-        await bot.send_message(Config.GROUP_ID, f"відповідь не по формату(роль:{role_names[type(role)]},"
-                                                f" task id:{role.task_id}")
-    await bot.edit_message_text(role_names[type(role)] + f"\n\nTask id:{role.task_id}\n\n"
-                                + new_text, Config.GROUP_ID, new_message.message_id)
+        await bot.send_message(Config.GROUP_ID, __translate(f"відповідь не по формату(роль:{role_names[type(role)]},"
+                                                f" task id:{role.task_id}", role.chat_id))
+    await bot.edit_message_text(__translate(role_names[type(role)] + f"\n\nTask id:{role.task_id}\n\n"
+                                + new_text, role.chat_id), Config.GROUP_ID, new_message.message_id)
     return new_text
 
 
@@ -84,34 +95,37 @@ async def solve_task(message: Message) -> None:
     if not bot.has_chat(message.chat.id):
         await bot.send_message(message.chat.id, "Спочатку напишіть /start")
         return
-    if message.content_type == ContentType.TEXT:
+    if message.content_type in [ContentType.TEXT, ContentType.DOCUMENT]:
+        chat_id = message.chat.id
+        message_text = message.text
+        if message_text is None:
+            message_text = message.md_text
         task_id = message.message_id
-        new_message = await bot.send_message(message.chat.id, __translate("Завантаження...", message.chat.id))
+        new_message = await bot.send_message(message.chat.id, "Завантаження...")
         # initialize roles
-        checker = Checker(task_id)
-        creator = Creator(task_id)
-        uniter = Uniter(task_id)
-        realizer = Realizer(task_id)
+        checker = Checker(task_id, chat_id)
+        creator = Creator(task_id, chat_id)
+        uniter = Uniter(task_id, chat_id)
+        realizer = Realizer(task_id, chat_id)
 
-        text = message.text
         # while checker think functions cant solve a task
         while True:
             # checker
-            answer = await __send_message(checker, text, "Завантаження валідатора")
+            answer = await __send_message(checker, message_text, "Завантаження валідатора")
             if answer == 'так':
                 break
 
             # creator
-            text = await __send_message(creator, text, "Завантаження творця")
+            text = await __send_message(creator, message_text, "Завантаження творця")
 
             # maker
-            maker = Maker(task_id)
+            maker = Maker(task_id, chat_id)
             text = await __send_message(maker, text, "Завантаження розробника")
             # maker can recode functions after tester run tests
             maker.recode = True
 
             # tester
-            tester = Tester(task_id)
+            tester = Tester(task_id, chat_id)
             # while tester has tests that fall during running
             while True:
                 await __send_message(tester, text, "Завантаження тестера")
@@ -124,9 +138,33 @@ async def solve_task(message: Message) -> None:
             # uniter
             text = await __send_message(uniter, text, "Завантаження головного розробника")
             # save all functions
-            file = open(Functions.__file__, "w")
-            file.write(text)
+            if not(maker.libraries is None):
+                for library in maker.libraries:
+                    pip.main(['install', library])
+            import Functions as functions
+            with open(functions.__file__, "w", encoding='utf-8') as file:
+                file.write(text)
+
+        # get text of file
+        if not (message.document is None):
+            file_id = await bot.get_file(message.document.file_id)
+            result = await bot.download_file(file_id)
+            file = BufferedInputFile(result, f"{chat_id}_{message.message_id}")
 
         # realizer
-        text = await __send_message(realizer, message.text, "Завантаження виконувача")
-        await bot.edit_message_text(__translate(text, message.chat.id), message.chat.id, new_message.message_id)
+        text = await __send_message(realizer, message_text, "Завантаження виконувача")
+        import Functions
+        if realizer.kwargs is None:
+            text = getattr(Functions, text)()
+        else:
+            if 'file' in realizer.kwargs and not('file' in getattr(Functions, text).__code__.co_varnames):
+                bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
+                                             message.chat.id), message.chat.id)
+                return
+            text = getattr(Functions, text)(**realizer.kwargs)
+        if isinstance(text, str):
+            await bot.edit_message_text(__translate(text, chat_id), chat_id, new_message.message_id)
+        elif isinstance(text, BinaryIO) or issubclass(text, BinaryIO):
+            await bot.edit_message_text(__translate("Ось тут потрібний "
+                                                    "вам файл", chat_id), chat_id, new_message.message_id)
+            await bot.send_document(chat_id, )

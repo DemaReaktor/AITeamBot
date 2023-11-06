@@ -2,8 +2,8 @@ from env.Role import RoleWithTask, validate_json
 
 
 class Creator(RoleWithTask):
-    def __init__(self, task_id: int):
-        super().__init__(task_id, "gpt-3.5-turbo-16k")
+    def __init__(self, *args, **kwargs):
+        super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
         # validate json
@@ -16,15 +16,27 @@ class Creator(RoleWithTask):
                 return False
         return True
 
-    def example(self) -> str | list | None:
-        return ('[{"name": "add", "description": "adds elements"}, {"name": "minus", "description": "minus elements"},'
-                '{"name": "multiply", "description": "multiplies elements"}]')
+    def example(self) -> str | list[str] | None:
+        return [('[{"name": "add", "description": "adds elements"}, {"name": "minus", "description": "minus elements"},'
+                '{"name": "multiply", "description": "multiplies elements"}]'),
+                '[{"name":"random int","description":"return random int"},{"name":"range","description":"set int '
+                'into range"}]']
 
     def system(self) -> str:
         # checker should return a list which has elements as name of step and his description
-        # {name: add ,description: adds numbers},{name: minus ,description: minus numbers},
-        return ("Тобі надаються текст завдання . Треба розбити завдання "
-                "на прості кроки. У відповідь написати json текст, який містить список об'єктів. Кожен об'єкт містить "
+        return ("Тобі надається текст завдання. Треба розбити завдання на прості кроки."
+                " Виконай усі умови:"
+                "\n1. Створи список послідовних кроків."
+                "\n2. У відповідь записати лише json текст, який містить список."
+                "\n3. Кожен об'єкт у списку повиннен мати два поля: name i description."
+                "\n4. Поле name повинно мати назву відповідного кроку."
+                "\n5. Поле description повинно мати опис відповідного кроку."
+                "\n6. Значення полей name i description мають бути написанні англійською мовою."
+                "\n7. У відповіді немає нічого бути крім json текста."
+                "\n Усі умови повинні виконуватись."
+                "на прості кроки. У відповідь треба написати лише json текст, який містить список об'єктів."
+                " Кожен об'єкт містить "
                 "поле name, значення якого має бути назва кроку, також кожен об'єкт повинен мати поле description, "
-                "значення якого має бути опис кроку."
-                " Назви і опис може бути тільки англійською мовою.")
+                "значення якого має бути опис кроку. Значення name i description мають бути на англійській мові."
+                "У відповіді має бути лише json текст без додаткового тексту і пояснення. ")
+

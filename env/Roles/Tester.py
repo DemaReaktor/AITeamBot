@@ -2,8 +2,8 @@ from env.Role import RoleWithTask, validate_syntax, validate_json, get_json
 
 
 class Tester(RoleWithTask):
-    def __init__(self, task_id: int):
-        super().__init__(task_id, "gpt-3.5-turbo-16k")
+    def __init__(self, *args, **kwargs):
+        super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
         data = validate_json(text)
@@ -16,7 +16,7 @@ class Tester(RoleWithTask):
             return False
         return validate_syntax(data['tests']) and (data['result'] == 'чисто' or validate_syntax(data['result']))
 
-    def example(self) -> str | list | None:
+    def example(self) -> str | list[str] | None:
         return [('{"tests":"def test_add(self):\n'
                     '\tself.assertEqual(add(1.0, 2.0, 3.0), 6.0)\n'
                     '\tself.assertEqual(add(0.0, 0.0, 0.0), 0.0)\n'
@@ -31,25 +31,29 @@ class Tester(RoleWithTask):
                  '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n"}')
                 ]
 
-    def system(self):
+    def system(self) -> str:
         # tester get all functions
         # he returns all written tests
         # he also returns all tests that fall during running
         # if no one test fall he returns 'чисто'
         return ("Тобі надаються функції мови Python. Уяви себе тестером. Створи unit-тести "
-                "для кожної функції. Потім запусти їх. Виведи усі тести і результат. У відповідь впиши json текст,"
-                "який містить один об'єкт. Цей об'єкт містить поле tests, значення якого текст, у якому "
-                "має бути написаний код тестів. "
-                "Також об'єкт містить поле result, значення якого має бути слово 'чисто' якщо всі тести пройшли"
-                " успішно. Якщо хоча б один тест не пройшов успішно, поле result містите текст, у якому має бути"
-                " код тестів, які не пройшли успішно.")
+                "для кожної функції. Потім запусти їх."
+                " Виконай усі умови:"
+                "\n1. У відповідь записати лише json текст, який містить лише один об'єкт, який містить два поля:"
+                " tests i result."
+                "\n2. Поле tests повинно мати код тестів."
+                "\n3. Запусти усі тести, визнач, які тести були неуспішними."
+                "\n4. Якщо є хоча б один неуспішний тест, поле result повинно мати код усіх неуспішних тестів."
+                "\n5. Якщо ж немає неуспішних тестів, у поле result вписати лише слово 'чисто'."
+                "\n6. У відповіді немає нічого бути крім json текста."
+                "\n Усі умови повинні виконуватись.")
 
     def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
         if result is None:
             return None
         # get tests and fall tests
-        data = get_json(text)
+        data = get_json(result)
         # get fall tests
         if data['result'] == 'чисто':
             self.__test_falls = None

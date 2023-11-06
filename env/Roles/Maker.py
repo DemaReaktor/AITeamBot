@@ -2,9 +2,9 @@ from env.Role import RoleWithTask, validate_syntax, validate_json, get_json
 
 
 class Maker(RoleWithTask):
-    def __init__(self, task_id: int):
+    def __init__(self, *args, **kwargs):
         self.recode = False
-        super().__init__(task_id, "gpt-3.5-turbo-16k")
+        super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
         if not self.recode:
@@ -28,27 +28,25 @@ class Maker(RoleWithTask):
                     '\n'
                     'def minus(a: float, b: float, c: float) -> float:\n'
                     '\t""" minus elements""""\n'
-                    '\treturn a - b - c\n')
+                    '\treturn add(a, -b, -c)\n')
 
-    def example(self) -> str | list | None:
+    def example(self) -> str | list[str] | None:
         if self.recode:
             return Maker.example_text
         return ['{"libraries": [], "functions": "'+Maker.example_text+'"}',
                 '{"libraries": [json,openai], "functions": "'+Maker.example_text+'\n\n'
-                'def generate_and_save_text(prompt, max_tokens=50,'
+                'import json\nimport openai\ndef generate_and_save_text(prompt, max_tokens=50,'
                                     'output_file="generated_text.json"):\ntry:\nopenai.api_key = "API_OPENAI"\n'
                                    '\nresponse = openai.Completion.create(\nengine="text-davinci-002",\nprompt=prompt,'
                                    '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
                                    'with open(output_file, "w") as file:\njson.dump({"prompt": prompt, '
                                    '"generated_text": generated_text}, file)\n\nreturn generated_text\n\n'
-                                   'except Exception as e:\nreturn str(e)\n\n"}']
-
-    generate_and_save_text_code = ('output_file="generated_text.json"):\ntry:\nopenai.api_key = "ВАШ_КЛЮЧ_API_OPENAI"\n'
-                                   '\nresponse = openai.Completion.create(\nengine="text-davinci-002",\nprompt=prompt,'
-                                   '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
-                                   'with open(output_file, "w") as file:\njson.dump({"prompt": prompt, '
-                                   '"generated_text": generated_text}, file)\n\nreturn generated_text\n\n'
-                                   'except Exception as e:\nreturn str(e)\n\n')
+                                   'except Exception as e:\nreturn str(e)\n\n'
+                                    'def generate_and_save_text_to_binaryio(generated_text):\n'
+                                    '\toutput_binary_io = io.BytesIO()\n'
+                                    '\toutput_binary_io.write(generated_text.encode("utf-8"))\n'
+                                    '\toutput_binary_io.seek(0)\n'
+                                    '\treturn output_binary_io"}']
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
@@ -57,24 +55,45 @@ class Maker(RoleWithTask):
             # he returns rewritten functions that all tests did not fall
             return("Тобі надається текст, який містить функції , потім коментар '#-----------------',"
                    " потім тести. Ті тести показують, які помилки є у функціях. Уяви себе розробником, який "
-                   "виправляє баги, маючи фуункції і тести, за допомогою яких тестували ті функції. Треба виправити"
-                   "код функцій, щоб не було багів, через які спрацьовують тести. У відповідь вписати лише текст з "
-                   "оновленими функціями. Документацію не міняти.")
+                   "виправляє баги, маючи функції і тести, за допомогою яких тестували ті функції. Треба виправити"
+                   "код функцій, щоб не було багів, через які спрацьовують тести."
+                   " Виконай усі умови:"
+                   "\n1. Виправ функції, щоб усі тести проходили."
+                   "\n2. Кожна функція повинна використовувати попередньо створену функцію(2га функція використовує "
+                   "1шу функцію, а 3тя функція використовує 2гу функцію і так далі)."
+                   "\n3. У відповідь записати лише код усіх функцій разом з їхніми імпортованими модулями."
+                   "\n4. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
+                   "\n5. У відповіді немає нічого бути крім коду функцій та імпортованих модулів."
+                   "\n Усі умови повинні виконуватись.")
         # maker has names and descriptions of functions which he should write
         # he returns a list of libraries which will be used by functions.
         # If no one library is needed he will return 'Немає бібліотек'
         # he also returns a list of functions
         return ("Тобі надається json текст, який містить список об'єктів, кожен з яких має поле name i description. "
-                "Значення name містить назву функції, а значення description - опис функції."
-                " Уяви себе програмістом і напиши функції"
-                "на мові Python. Кожен елемент містить назву і опис функції, яка має бути написана."
-                "Кожна функція повина мати назву як назву у елементі. Функція повина мати детальну документацію. "
-                "Для написання функцій можна використовувати "
-                "бібліотеки Python, а також OpenAI API. У відповідь написати json текст, який містить один об'єкт."
-                "Об'єкт містить поле libraries, значення якого має бути json список бібліотек, які використовуються("
-                "якщо жодні бібліотеки не використовуються, то просто має бути порожній список)."
-                "Також об'єкт повинен мати поле functions, "
-                "значення якого має бути json текст, що містить лише функцій(задокоментовані).")
+                " Уяви себе програмістом і виконай усі умови:"
+                "\n1. Розроби функції на мові Python, кожна функція має робити те, що вказано у полі description "
+                "відповідного об'єкта у списку."
+                "\n2. кількість функцій має дорівнювати кількості об'єктів у списку."
+                "\n3. Кожна функція повнина мати назву таку ж як поле name відповідного об'єкта"
+                "\n4. Кожна функція повинна мати документацію та анотацію."
+                "\n5. Якщо завдання у описі об'єкта можна реалізувати за допомогою OpenAI API, тоді використовуати"
+                "OpenAI API."
+                "\n6. Можна використовувати будь які бібліотеки Python."
+                "\n7. Кожна функція повинна використовувати попередньо створену функцію(2га функція використовує "
+                "1шу функцію, а 3тя функція використовує 2гу функцію і так далі)."
+                # "\n8. Якщо останя функція повертає об'єкт, який може бути файлом(об'єкт що є фотографією,"
+                # " текстовим файлом, аудіо, відео і так далі),"
+                # " тоді додатково треба розробити функцію, яка буде перетворювати такий об'єкт на об'єкт типу BinaryIO. "
+                # "Назва функції має бути назвою останьої функції + '_to_binaryio'."
+                "\n9. У відповідь записати json текст, який містить один об'єкт, у якого 2 поля: libraries i functions."
+                "\n10. Якщо функції не використовують жодну бібліотеку, поле libraries повинно мати порожній список."
+                "\n11. Якщо функції використовують бібліотеку або бібліотеки, поле libraries повинно мати список,"
+                "який містить усі використані бібліотеки."
+                "\n12. Поле functions повиннен мати код функцій разом усіма імпортованими бібліотеками."
+                "\n13. Функція останього опису повиннен повертати значення типу str або BinaryIO"
+                "\n14. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
+                "\n15. У відповіді немає нічого бути крім json текста."
+                "\n Усі умови повинні виконуватись.")
 
     @property
     def libraries(self) -> list[str] | None:
