@@ -179,24 +179,21 @@ async def solve_task(message: Message) -> None:
                                                                "5 хв", chat_id))
         functions = importlib.import_module("Functions")
         importlib.reload(functions)
-        if realizer.kwargs is None:
-            text = getattr(functions, function_name)()
+        function = getattr(functions, function_name)
+        args_count = function.__code__.co_argcount
+        if args_count == 1:
+            if file is None:
+                return await bot.send_message(chat_id, __translate("помилка: аргументів забагато", chat_id))
+            result = function(file)
+        elif args_count == 0:
+            result = function()
         else:
-            if 'file' in getattr(functions, function_name).__code__.co_varnames and file is None:
-                await bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
-                                             chat_id), chat_id)
-                return
-            if 'file' in realizer.kwargs:
-                data = realizer.kwargs
-                data.pop('file')
-                text = getattr(functions, function_name)(file, **realizer.kwargs)
-            else:
-                text = getattr(functions, function_name)(**realizer.kwargs)
-        if isinstance(text, BinaryIO):
+            return await bot.send_message(chat_id, __translate("помилка: аргументів забагато", chat_id))
+        if isinstance(result, BinaryIO):
             await bot.edit_message_text(__translate("Ось тут потрібний "
                                                     "вам файл", chat_id), chat_id, new_message.message_id)
-            await bot.send_document(chat_id, text)
-        elif isinstance(text, str):
-            await bot.edit_message_text(__translate(text, chat_id), chat_id, new_message.message_id)
+            await bot.send_document(chat_id, result)
+        elif isinstance(result, str):
+            await bot.edit_message_text(__translate(result, chat_id), chat_id, new_message.message_id)
         else:
-            await bot.edit_message_text(__translate(str(text), chat_id), chat_id, new_message.message_id)
+            await bot.edit_message_text(__translate(str(result), chat_id), chat_id, new_message.message_id)

@@ -1,4 +1,4 @@
-from env.Role import RoleWithTask
+from env.Role import RoleWithTask, validate_bool
 import env.Functions as Functions
 
 
@@ -7,7 +7,7 @@ class Checker(RoleWithTask):
         super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
-        return text in ['так', 'ні']
+        return validate_bool(text)
 
     def example(self) -> str | list[str] | None:
         return ['ні', 'так']

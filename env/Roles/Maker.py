@@ -12,14 +12,14 @@ class Maker(RoleWithTask):
             if data is None or not isinstance(data, dict):
                 return False
             # if no properties
-            if not ('libraries' in data) or not ('functions' in data) or not isinstance(data['libraries'], list):
+            if not ('libraries' in data) or not ('function' in data) or not isinstance(data['libraries'], list):
                 return False
-            if not isinstance(data['functions'], str):
+            if not isinstance(data['function'], str):
                 return False
             for element in data['libraries']:
                 if not isinstance(element, str):
                     return False
-            text = data['functions']
+            text = data['function']
         return validate_syntax(text.removesuffix('```').removesuffix('python'))
 
     example_text = ('def add(a: float, b: float, c: float) -> float:\n'
@@ -33,8 +33,8 @@ class Maker(RoleWithTask):
     def example(self) -> str | list[str] | None:
         if self.recode:
             return Maker.example_text
-        return ['{"libraries": [], "functions": "'+Maker.example_text+'"}',
-                '{"libraries": [json,openai], "functions": "'+Maker.example_text+'\n\n'
+        return ['{"libraries": [], "function": "'+Maker.example_text+'"}',
+                '{"libraries": [json,openai], "function": "'+Maker.example_text+'\n\n'
                 'import json\nimport openai\ndef generate_and_save_text(prompt, max_tokens=50,'
                                     'output_file=\\"generated_text.json\\"):\ntry:\nopenai.api_key = \\"API_OPENAI\\"\n'
                                    '\nresponse = openai.Completion.create(\nengine=\\"text-davinci-002\\",\nprompt=prompt,'
@@ -53,51 +53,43 @@ class Maker(RoleWithTask):
         if self.recode:
             # maker gets own written functions and all fall tests
             # he returns rewritten functions that all tests did not fall
-            return("Тобі надається текст, який містить функції , потім коментар '#-----------------',"
-                   " потім тести. Ті тести показують, які помилки є у функціях. Уяви себе розробником, який "
+            return("Тобі надається текст, який містить функцію , потім коментар '#-----------------',"
+                   " потім тести. Ті тести показують, які помилки є у функції. Уяви себе розробником, який "
                    "виправляє баги, маючи функції і тести, за допомогою яких тестували ті функції. Треба виправити"
-                   "код функцій, щоб не було багів, через які спрацьовують тести."
+                   "код функції, щоб не було багів, через які спрацьовують тести."
                    " Виконай усі умови:"
-                   "\n1. Виправ функції, щоб усі тести проходили."
-                   "\n2. У відповідь записати лише код усіх функцій разом з їхніми імпортованими модулями."
-                   "\n3. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
-                   "\n4. У відповіді немає нічого бути крім коду функцій та імпортованих модулів."
-                   "\n5. У тексті функцій перед усіма \" мають стояти \\."
+                   "\n1. Виправ функцію, щоб усі тести проходили."
+                   "\n2. У відповідь записати лише код функції разом з їхніми імпортованими модулями."
+                   "\n3. Документація, коментарі та все інше у функції має бути написано англійською мовою."
+                   "\n4. У відповіді немає нічого бути крім коду функції та імпортованих модулів."
+                   "\n5. У тексті функції перед усіма \" мають стояти \\."
                    "\n Усі умови повинні виконуватись.")
         # maker has names and descriptions of functions which he should write
         # he returns a list of libraries which will be used by functions.
         # If no one library is needed he will return 'Немає бібліотек'
         # he also returns a list of functions
-        return ("Тобі надається json текст, який містить список об'єктів, кожен з яких має поле name i description. "
+        return ("Тобі надається json текст, який містить об'єкт, що має поля name, description, input i output. "
                 " Уяви себе програмістом і виконай усі умови:"
-                "\n1. Розроби функції на мові Python, кожна функція має робити те, що вказано у полі description "
-                "відповідного об'єкта у списку."
-                "\n2. кількість функцій має дорівнювати кількості об'єктів у списку."
-                "\n3. Кожна функція повнина мати назву таку ж як поле name відповідного об'єкта"
-                "\n4. Кожна функція повинна мати документацію та анотацію."
-                "\n5. Якщо завдання у описі об'єкта можна реалізувати за допомогою OpenAI API, тоді використовуати"
+                "\n1. Розроби функцію на мові Python, вона має робити те, що вказано у полі description."
+                "\n2. Функція повнина мати назву таку ж як поле name."
+                "\n3. Функція повинна мати документацію та анотацію."
+                "\n4. Якщо завдання у описі можна реалізувати за допомогою OpenAI API, тоді використовуати"
                 "OpenAI API."
-                "\n6. Можна використовувати будь які бібліотеки Python."
-                "\n7. Кожна функція повинна використовувати попередню створену функцію у себе в коді"
-                   "(2га функція використовує "
-                   "1шу функцію, а 3тя функція використовує 2гу функцію і так далі). Наприклад: функція minus "
-                   "використовує попередню функцію add: def minus(a,b,c):\n\treturn add(a,b,c)"
-                "1шу функцію, а 3тя функція використовує 2гу функцію і так далі)."
-                "\n8. Останя функція повинна повертати об'єкт типу str або BinaryIO об'єкт в залежності від того,"
-                "що вимагається в описі. Якщо опис вказує на повернення файлу, об'єкт, який має повернути функція,"
-                "має бути типу BinaryIO, інакше str."
-                "\n9. Якщо якась функція вимагає отримати в параметрі файл, назва параметру має бути file, а тип "
-                "параметру BinaryIO."
-                "\n10. У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i functions."
-                "\n11. Якщо функції не використовують жодну бібліотеку, поле libraries повинно мати порожній список."
-                "\n12. Якщо функції використовують бібліотеку або бібліотеки, поле libraries повинно мати список,"
+                "\n5. Можна використовувати будь які бібліотеки Python."
+                "\n6. Функція повинна повертати об'єкт типу str якщо значення поля output дорівнює 'ні'."
+                "Якщо ж значення поля output є 'так', функція повинна повертати об'єкт типу BinaryIO."
+                "\n7. Якщо значення поля input є 'так', функція повинна мати лише один аргумент типу BinaryIO."
+                " Якщо ж значення input є 'ні', функції не можна мати аргументів."
+                "\n8. Код функції має бути такий, щоб функція виконувала завдання у описі, але прицьому повертала "
+                "значення типу, вказаного у пункті 6, і також мала аргументи, вказані у пункті 7."
+                "\n9. У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i function."
+                "\n10. Якщо функція не використовує жодну бібліотеку, поле libraries повинно мати порожній список."
+                "\n11. Якщо функція використовує бібліотеку або бібліотеки, поле libraries повинно мати список,"
                 "який містить усі використані бібліотеки."
-                "\n13. Поле functions повиннен мати код функцій разом усіма імпортованими бібліотеками."
-                "\n14. У тексті функцій перед усіма \" мають стояти \\."
-                "\n15. Функція останього опису повиннен повертати значення типу str або BinaryIO"
-                "\n16. Документація, коментарі та все інше у функціях має бути написано англійською мовою."
-                "\n17. Кожна наступна функція повинна використовувати попередню або попередні функції."
-                "\n18. У відповіді немає нічого бути крім json."
+                "\n12. Поле function повиннен мати код функції разом усіма імпортованими бібліотеками."
+                "\n13. У тексті функцій перед усіма \" мають стояти \\."
+                "\n14. Документація, коментарі та все інше у функції має бути написано англійською мовою."
+                "\n15. У відповіді немає нічого бути крім json."
                 "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json!!! ")
 
     @property
@@ -110,8 +102,8 @@ class Maker(RoleWithTask):
 
     def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
-        if result is None:
-            return None
+        if not isinstance(result, str):
+            return result
         # get libraries and functions
         data = get_json(result)
         # get libraries
@@ -120,4 +112,4 @@ class Maker(RoleWithTask):
         else:
             self.__libraries = data['libraries']
         # return functions
-        return data['functions'].replace('```', '').removesuffix('python')
+        return data['function'].replace('```', '').removesuffix('python')

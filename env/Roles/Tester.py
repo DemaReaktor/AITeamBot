@@ -17,18 +17,18 @@ class Tester(RoleWithTask):
         return validate_syntax(data['tests']) and (data['result'] == 'чисто' or validate_syntax(data['result']))
 
     def example(self) -> str | list[str] | None:
-        return [('{"tests":"def test_add(self):\n'
+        return ['{"tests":"def test_add(self):\n'
                     '\tself.assertEqual(add(1.0, 2.0, 3.0), 6.0)\n'
                     '\tself.assertEqual(add(0.0, 0.0, 0.0), 0.0)\n'
-                    '\tself.assertEqual(add(-1.0, -2.0, -3.0), -6.0)\n\n'
-                    'def test_minus(self):\n'
+                    '\tself.assertEqual(add(-1.0, -2.0, -3.0), -6.0)\n\n","result":"чисто"}',
+                '{"tests":"def test_minus(self):\n'
                     '\tself.assertEqual(minus(5.0, 3.0, 1.0), 1.0)\n'
                     '\tself.assertEqual(minus(10.0, 2.0, 3.0), 5.0)\n'
                     '\tself.assertEqual(minus(0.0, 0.0, 0.0), 0.0)\n'
-                    '\tself.assertEqual(minus(-1.0, -2.0, -3.0), 4.0)", "result":"чисто"}'),
-                ('{"tests":"def test_multiply(self):\n'
+                    '\tself.assertEqual(minus(-1.0, -2.0, -3.0), 4.0)", "result":"чисто"}',
+                '{"tests":"def test_multiply(self):\n'
                  '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n", "result":"def test_multiply(self):\n'
-                 '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n"}')
+                 '\tself.assertEqual(multiply(1.0, 2.0, 3.0), 6.0)\n"}'
                 ]
 
     def system(self) -> str:
@@ -36,8 +36,8 @@ class Tester(RoleWithTask):
         # he returns all written tests
         # he also returns all tests that fall during running
         # if no one test fall he returns 'чисто'
-        return ("Тобі надаються функції мови Python. Уяви себе тестером. Створи unit-тести "
-                "для кожної функції. Потім запусти їх."
+        return ("Тобі надається функція мови Python. Уяви себе тестером. Створи unit-тести "
+                "для функції. Потім запусти їх."
                 " Виконай усі умови:"
                 "\n1. У відповідь записати лише json текст, який містить лише один об'єкт, який містить два поля:"
                 " tests i result."
@@ -51,8 +51,8 @@ class Tester(RoleWithTask):
 
     def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
-        if result is None:
-            return None
+        if not isinstance(result, str):
+            return result
         # get tests and fall tests
         data = get_json(result)
         # get fall tests

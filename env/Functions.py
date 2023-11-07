@@ -1,6 +1,18 @@
 import typing
 from typing import BinaryIO
 
+def fibonacci() -> str:
+    """This function prints the 8th Fibonacci number"""
+    # Fibonacci sequence initialization
+    fib = [0, 1]
+    
+    # Compute the 8th Fibonacci number
+    for i in range(2, 8):
+        fib.append(fib[i-1] + fib[i-2])
+    
+    # Return the 8th Fibonacci number as a string
+    return str(fib[-1])
+
 def take_photo() -> str:
     """ Takes a photo using a camera or phone """
     # implementation

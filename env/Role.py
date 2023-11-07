@@ -7,6 +7,10 @@ from typing import Any, Type
 import json
 
 
+def validate_bool(value: str):
+    return value in ['так', 'ні']
+
+
 def get_json(text: str) -> Any | None:
     return json.loads(ast.literal_eval(json.dumps(text)), strict=False)
 
