@@ -20,7 +20,7 @@ class Maker(RoleWithTask):
                 if not isinstance(element, str):
                     return False
             text = data['function']
-        return validate_syntax(text.removesuffix('```').removesuffix('python'))
+        return validate_syntax(text)
 
     example_text = ('def add(a: float, b: float, c: float) -> float:\n'
                     '\t\\"\\"\\" adds elements\\"\\"\\"\n'
@@ -103,6 +103,8 @@ class Maker(RoleWithTask):
     def send_request(self, text: str) -> str | None:
         result = super().send_request(text)
         if not isinstance(result, str):
+            return result
+        if self.recode:
             return result
         # get libraries and functions
         data = get_json(result)

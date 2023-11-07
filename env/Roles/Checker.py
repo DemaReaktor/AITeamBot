@@ -1,3 +1,8 @@
+import os
+from typing import Type
+
+from openai import OpenAIError
+
 from env.Role import RoleWithTask, validate_bool
 import env.Functions as Functions
 
@@ -29,3 +34,8 @@ class Checker(RoleWithTask):
         file_text = open(Functions.__file__, "rb").readlines()
         # input data of request is a text of task and functions which already exist
         return f"завдання:\"{text}\",\n функції:\"{file_text}\""
+
+    def send_request(self, text: str) -> str | None | Type[OpenAIError]:
+        if os.stat(Functions.__file__).st_size == 0:
+            return 'ні'
+        return super().send_request(text)

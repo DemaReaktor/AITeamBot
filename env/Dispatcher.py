@@ -169,8 +169,7 @@ async def solve_task(message: Message) -> None:
         file = None
         if not (message.document is None):
             file = await bot.get_file(message.document.file_id)
-            result = await bot.download_file(file.file_path)
-            file = BufferedInputFile(result, f"{chat_id}_{message.message_id}")
+            file = await bot.download_file(file.file_path)
 
         # realizer
         function_name = await __send_message(realizer, message_text, "Завантаження виконувача")

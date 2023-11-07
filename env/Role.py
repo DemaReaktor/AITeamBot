@@ -20,6 +20,7 @@ def validate_json(text: str) -> Any | None:
         # load json (ast.literal_eval(json.dumps()) need if properties have ' instead ")
         return json.loads(ast.literal_eval(json.dumps(text)), strict=False)
     except json.JSONDecodeError:
+        print("\njson no\n")
         return None
 
 
@@ -28,7 +29,7 @@ def validate_syntax(text: str) -> bool:
     ignore ```"""
     validate_text(text)
     try:
-        ast.parse(text.replace('```', ''))
+        ast.parse(text.replace('```', '').removeprefix('python'))
         return True
     except SyntaxError:
         return False
