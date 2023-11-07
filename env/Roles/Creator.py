@@ -22,7 +22,7 @@ class Creator(RoleWithTask):
                 '{"name": "multiply", "description": "multiplies elements", "input":"ні", "output":"ні"}',
                 '{"name":"random int","description":"return random int", "input":"ні", "output":"ні"}',
                 '{"name":"range","description":"set int into range", "input":"ні", "output":"ні"}',
-            '{"name":"photo_to_binaryio", "description":"convert object of type Image into object of type BinaryIO"'
+            '{"name":"photo_to_binaryio", "description":"convert object of type Image into object of type typing.BinaryIO"'
             ', "input":"так", "output":"так"}']
 
     def system(self) -> str:

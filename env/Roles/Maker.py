@@ -43,7 +43,7 @@ class Maker(RoleWithTask):
                                    '\\"generated_text\\": generated_text}, file)\n\nreturn generated_text\n\n'
                                    'except Exception as e:\nreturn str(e)\n\n'
                                     'def generate_and_save_text_to_binaryio(generated_text):\n'
-                                    '\toutput_binary_io = io.BytesIO()\n'
+                                    '\toutput_binary_io = typing.BinaryIO()\n'
                                     '\toutput_binary_io.write(generated_text.encode(\\"utf-8\\"))\n'
                                     '\toutput_binary_io.seek(0)\n'
                                     '\treturn output_binary_io"}']
@@ -77,8 +77,8 @@ class Maker(RoleWithTask):
                 "OpenAI API."
                 "\n5. Можна використовувати будь які бібліотеки Python."
                 "\n6. Функція повинна повертати об'єкт типу str якщо значення поля output дорівнює 'ні'."
-                "Якщо ж значення поля output є 'так', функція повинна повертати об'єкт типу BinaryIO."
-                "\n7. Якщо значення поля input є 'так', функція повинна мати лише один аргумент типу BinaryIO."
+                "Якщо ж значення поля output є 'так', функція повинна повертати об'єкт типу typing.BinaryIO."
+                "\n7. Якщо значення поля input є 'так', функція повинна мати лише один аргумент типу typing.BinaryIO."
                 " Якщо ж значення input є 'ні', функції не можна мати аргументів."
                 "\n8. Код функції має бути такий, щоб функція виконувала завдання у описі, але прицьому повертала "
                 "значення типу, вказаного у пункті 6, і також мала аргументи, вказані у пункті 7."

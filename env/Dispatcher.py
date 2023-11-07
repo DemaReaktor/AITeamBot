@@ -1,6 +1,5 @@
 from aiogram import Dispatcher, F
-from openai.error import OpenAIError, RateLimitError, ServiceUnavailableError
-from aiogram.types import Message, ContentType, BufferedInputFile
+from aiogram.types import Message, ContentType
 from TelegramBot import bot
 import importlib
 from Translater import translate as tr
