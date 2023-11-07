@@ -183,8 +183,8 @@ async def solve_task(message: Message) -> None:
             text = getattr(functions, function_name)()
         else:
             if 'file' in getattr(functions, function_name).__code__.co_varnames and file is None:
-                bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
-                                             message.chat.id), message.chat.id)
+                await bot.send_message(__translate("завдання вимає файлу, який не прикріплений до тексту",
+                                             chat_id), chat_id)
                 return
             if 'file' in realizer.kwargs:
                 data = realizer.kwargs
