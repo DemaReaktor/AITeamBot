@@ -9,7 +9,7 @@ import env.Functions as Functions
 
 class Checker(RoleWithTask):
     def __init__(self, *args, **kwargs):
-        super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
         return validate_bool(text)

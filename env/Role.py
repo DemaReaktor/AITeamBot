@@ -38,17 +38,8 @@ def validate_syntax(text: str) -> bool:
 class Role(abc.ABC):
     """send requests to ChatGPT using a system description"""
 
-    def __init__(self, model: str = "gpt-3.5-turbo-16k"):
-        self.__model = model
-
-    @property
-    def model(self):
-        return self.__model
-
-    @model.setter
-    def model(self, text):
-        validate_text(text)
-        self.__model = text
+    def __init__(self, model: str = "gpt-4"):
+        self.model = model
 
     def validate_answer(self, text: str) -> bool:
         """check ChatGPT answer is right as role need to answer"""
@@ -91,19 +82,9 @@ class Role(abc.ABC):
 
 class RoleWithTask(Role, abc.ABC):
     """Role which save data about task"""
-    def __init__(self, task_id: int, chat_id: int, *args, **kwargs):
+    def __init__(self, task_id: int, chat_id: int, model: str = "gpt-4"):
+        super().__init__(model)
         validate_int(task_id)
         validate_int(chat_id)
-        self.__id = task_id
-        self.__chat_id = chat_id
-        super().__init__(*args, **kwargs)
-
-    @property
-    def task_id(self) -> int:
-        """id of task role are created for"""
-        return self.__id
-
-    @property
-    def chat_id(self) -> int:
-        """id of chat where role are created"""
-        return self.__chat_id
+        self.task_id = task_id
+        self.chat_id = chat_id

@@ -4,7 +4,7 @@ from env.Role import RoleWithTask, validate_syntax, validate_json, get_json
 class Maker(RoleWithTask):
     def __init__(self, *args, **kwargs):
         self.recode = False
-        super().__init__(model="gpt-3.5-turbo-16k", *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def validate_answer(self, text: str) -> bool:
         if not self.recode:
@@ -20,33 +20,40 @@ class Maker(RoleWithTask):
                 if not isinstance(element, str):
                     return False
             text = data['function']
+        if not(text.find('pass') == -1):
+            return False
         return validate_syntax(text)
 
-    example_text = ('def add(a: float, b: float, c: float) -> float:\n'
-                    '\t\\"\\"\\" adds elements\\"\\"\\"\n'
-                    '\treturn a + b + c\n'
-                    '\n'
-                    'def minus(a: float, b: float, c: float) -> float:\n'
-                    '\t\\"\\"\\" minus elements\\"\\"\\"\n'
-                    '\treturn add(a, -b, -c)\n')
+    example_text = ('from PIL import Image, ImageDraw\n'
+                    'import io\n'
+                    'from typing import BinaryIO\n'
+                    'def create_photo_PNG()-> BinaryIO:\n'
+                    '\t\\"\\"\\" create photo\\"\\"\\"\n'
+                    '\timage = Image.new("RGB", (width, height), (255, 255, 255))\n'
+                    '\timage_bytes_io = io.BytesIO()\n'
+                    '\timage.save(image_bytes_io, format="PNG")\n'
+                    '\treturn image_bytes_io\n'
+                    )
 
     def example(self) -> str | list[str] | None:
         if self.recode:
             return Maker.example_text
-        return ['{"libraries": [], "function": "'+Maker.example_text+'"}',
-                '{"libraries": [json,openai], "function": "'+Maker.example_text+'\n\n'
-                'import json\nimport openai\ndef generate_and_save_text(prompt, max_tokens=50,'
-                                    'output_file=\\"generated_text.json\\"):\ntry:\nopenai.api_key = \\"API_OPENAI\\"\n'
-                                   '\nresponse = openai.Completion.create(\nengine=\\"text-davinci-002\\",\nprompt=prompt,'
-                                   '\nmax_tokens=max_tokens\n)\n\ngenerated_text = response.choices[0].text\n\n'
-                                   'with open(output_file, \\"w\\") as file:\njson.dump({\\"prompt\\": prompt, '
-                                   '\\"generated_text\\": generated_text}, file)\n\nreturn generated_text\n\n'
-                                   'except Exception as e:\nreturn str(e)\n\n'
-                                    'def generate_and_save_text_to_binaryio(generated_text):\n'
-                                    '\toutput_binary_io = typing.BinaryIO()\n'
-                                    '\toutput_binary_io.write(generated_text.encode(\\"utf-8\\"))\n'
-                                    '\toutput_binary_io.seek(0)\n'
-                                    '\treturn output_binary_io"}']
+        return ['{"libraries": [pil, typing, io], "function": "'
+                ''+Maker.example_text+'"}',
+                '{"libraries": [pil, typing, io], "function": "'
+                '' + Maker.example_text + '"}',
+                '{"libraries": [soundfile, typing, io], "function": "'
+                'import soundfile as sf\n'
+                'import io\n'
+                'from typing import BinaryIO\n'
+                'def create_audio_wav() -> BinaryIO:\n'
+                '\t\\"\\"\\" create audio\\"\\"\\"\n'
+                '\ttime = range(int(44100 * 5))\n'
+                '\tsignal = [0.5 * i for i in time]\n'
+                '\taudio_bytes_io = io.BytesIO()\n'
+                '\tsf.write(audio_bytes_io, signal, sample_rate, format="wav")\n'
+                '\treturn audio_bytes_io\n'
+                '"}']
 
     def system(self) -> str:
         # if maker rewrite code after tester find bugs
@@ -68,28 +75,25 @@ class Maker(RoleWithTask):
         # he returns a list of libraries which will be used by functions.
         # If no one library is needed he will return 'Немає бібліотек'
         # he also returns a list of functions
-        return ("Тобі надається json текст, який містить об'єкт, що має поля name, description, input i output. "
+        return ("Тобі надається функція з документацією і анотацією, але без самої функції."
+                "Потрібно створити функцію. "
                 " Уяви себе програмістом і виконай усі умови:"
-                "\n1. Розроби функцію на мові Python, вона має робити те, що вказано у полі description."
-                "\n2. Функція повнина мати назву таку ж як поле name."
-                "\n3. Функція повинна мати документацію та анотацію."
-                "\n4. Якщо завдання у описі можна реалізувати за допомогою OpenAI API, тоді використовуати"
+                "\n- Створи тіло для функції. Повертаючий об'єкт повинен мати тип, що прописаний у анотації. Повертаючий "
+                "об'єкт також не повинен бути пустим."
+                "\n- Якщо повертаючий об'єкт є файлом, у функції в кінці назви має добавитись _ і формат "
+                "файлу, наприклад якщо повертаючим об'єктом є BinaryIO, а його дані є фотографією з форматом PNG, в "
+                "кінці назви функції має добавитись _PNG."
+                "\n- Якщо завдання у описі можна реалізувати за допомогою OpenAI API, тоді використовувати"
                 "OpenAI API."
-                "\n5. Можна використовувати будь які бібліотеки Python."
-                "\n6. Функція повинна повертати об'єкт типу str якщо значення поля output дорівнює 'ні'."
-                "Якщо ж значення поля output є 'так', функція повинна повертати об'єкт типу typing.BinaryIO."
-                "\n7. Якщо значення поля input є 'так', функція повинна мати лише один аргумент типу typing.BinaryIO."
-                " Якщо ж значення input є 'ні', функції не можна мати аргументів."
-                "\n8. Код функції має бути такий, щоб функція виконувала завдання у описі, але прицьому повертала "
-                "значення типу, вказаного у пункті 6, і також мала аргументи, вказані у пункті 7."
-                "\n9. У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i function."
-                "\n10. Якщо функція не використовує жодну бібліотеку, поле libraries повинно мати порожній список."
-                "\n11. Якщо функція використовує бібліотеку або бібліотеки, поле libraries повинно мати список,"
-                "який містить усі використані бібліотеки."
-                "\n12. Поле function повиннен мати код функції разом усіма імпортованими бібліотеками."
-                "\n13. У тексті функцій перед усіма \" мають стояти \\."
-                "\n14. Документація, коментарі та все інше у функції має бути написано англійською мовою."
-                "\n15. У відповіді немає нічого бути крім json."
+                "\n- Можна використовувати будь які бібліотеки Python."
+                "\n- У відповідь записати json, який містить один об'єкт, у якого 2 поля: libraries i function."
+                "\n- Якщо функція не використовує жодну бібліотеку, поле libraries повинно мати порожній список."
+                "\n- Якщо функція використовує бібліотеку або бібліотеки, поле libraries повинно мати список,"
+                "який містить усі використані бібліотеки. Вказувати лише назви біблотек, без шляху, тобто наприклад"
+                " якщо у коді використовується scipy.io.wavfile, то у список вписати лише scipy"
+                "\n- Поле function повиннен мати код функції разом усіма імпортованими бібліотеками."
+                "\n- У тексті функцій перед усіма \" мають стояти \\."
+                "\n- У відповіді немає нічого бути крім json."
                 "\n Усі умови повинні виконуватись. Наголошую, у відповіді має бути лише json!!! ")
 
     @property

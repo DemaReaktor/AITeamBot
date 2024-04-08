@@ -1,3 +1,6 @@
+import io
+import subprocess
+import aiogram.types
 from aiogram import Dispatcher, F
 from aiogram.types import Message, ContentType
 from TelegramBot import bot
@@ -6,6 +9,7 @@ from Translater import translate as tr
 from typing import BinaryIO, Type
 import Config
 import pip
+import time
 
 from Role import RoleWithTask
 # roles
@@ -80,6 +84,7 @@ async def __send_message(role: RoleWithTask, text: str, role_loading: str) -> st
     # while answer is not validated
     while True:
         new_text = role.send_request(text)
+        time.sleep(3)
         if isinstance(new_text, type):
             await bot.send_message(Config.GROUP_ID, f"помилка:{str(new_text)}")
             return new_text
@@ -130,10 +135,17 @@ async def solve_task(message: Message) -> None:
 
             # maker
             maker = Maker(task_id, chat_id)
-            text = await __send_message(maker, text, "Завантаження розробника")
+            text = await __send_message(maker, creator.text, "Завантаження розробника")
             if isinstance(text, type):
                 return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
                                                                    "5 хв", chat_id))
+            if not(maker.libraries is None):
+                for library in maker.libraries:
+                    try:
+                        subprocess.call(['pip', 'install', library])
+                        __import__(library)
+                    except Exception as ex:
+                        print(ex)
             # maker can recode functions after tester run tests
             maker.recode = True
 
@@ -157,18 +169,15 @@ async def solve_task(message: Message) -> None:
                 return await bot.send_message(chat_id, __translate("бот зараз дуже зайнятий, спробуйте через"
                                                                    "5 хв", chat_id))
             # save all functions
-            if not(maker.libraries is None):
-                for library in maker.libraries:
-                    pip.main(['install', library])
             import Functions as functions
             with open(functions.__file__, "w", encoding='utf-8') as file:
                 file.write(text)
 
         # get text of file
-        file = None
-        if not (message.document is None):
-            file = await bot.get_file(message.document.file_id)
-            file = await bot.download_file(file.file_path)
+        # file = None
+        # if not (message.document is None):
+        #     file = await bot.get_file(message.document.file_id)
+        #     file = await bot.download_file(file.file_path)
 
         # realizer
         function_name = await __send_message(realizer, message_text, "Завантаження виконувача")
@@ -178,19 +187,13 @@ async def solve_task(message: Message) -> None:
         functions = importlib.import_module("Functions")
         importlib.reload(functions)
         function = getattr(functions, function_name)
-        args_count = function.__code__.co_argcount
-        if args_count == 1:
-            if file is None:
-                return await bot.send_message(chat_id, __translate("помилка: аргументів забагато", chat_id))
-            result = function(file)
-        elif args_count == 0:
-            result = function()
-        else:
-            return await bot.send_message(chat_id, __translate("помилка: аргументів забагато", chat_id))
-        if isinstance(result, BinaryIO):
+        result = function()
+        if isinstance(result, (BinaryIO, io.BytesIO)):
+            file = aiogram.types.BufferedInputFile(result.read(), message_text + "." +
+                                                   str(function.__name__).split("_")[-1])
             await bot.edit_message_text(__translate("Ось тут потрібний "
                                                     "вам файл", chat_id), chat_id, new_message.message_id)
-            await bot.send_document(chat_id, result)
+            await bot.send_document(chat_id, file)
         elif isinstance(result, str):
             await bot.edit_message_text(__translate(result, chat_id), chat_id, new_message.message_id)
         else:

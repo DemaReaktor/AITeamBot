@@ -52,3 +52,17 @@ class Uniter(RoleWithTask):
             return result
         # remove ``` of text
         return result.replace('```', '')
+    #
+    # def send_request(self, text: str) -> str | None:
+    #     result = super().send_request(text)
+    #     if not isinstance(result, str):
+    #         return result
+    #     # get tests and fall tests
+    #     data = get_json(result)
+    #     # get fall tests
+    #     if data['result'] == 'чисто':
+    #         self.__test_falls = None
+    #     else:
+    #         self.__test_falls = data['result']
+    #     # return all tests
+    #     return data['tests']
